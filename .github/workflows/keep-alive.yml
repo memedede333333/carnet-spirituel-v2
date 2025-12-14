@@ -1,0 +1,28 @@
+name: Keep Supabase Alive
+
+on:
+  schedule:
+    # S'exécute tous les jours à 08:00 UTC
+    - cron: '0 8 * * *'
+  workflow_dispatch: # Permet de lancer manuellement depuis l'interface GitHub
+
+jobs:
+  ping-database:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install @supabase/supabase-js
+
+      - name: Ping Supabase REST API
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: node scripts/keep-supabase-alive.js

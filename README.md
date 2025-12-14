@@ -1,36 +1,92 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Carnet Spirituel
 
-## Getting Started
+Application web Next.js pour tenir un journal spirituel numérique.
 
-First, run the development server:
+## 📚 Documentation
+
+**👉 [DOCUMENTATION COMPLÈTE](./DOCUMENTATION-COMPLETE.md)** - Documentation exhaustive du projet (1010 lignes)
+
+La documentation complète contient :
+- Vue d'ensemble et architecture
+- Structure du projet
+- Modules et fonctionnalités
+- Configuration et installation
+- Base de données Supabase
+- Système de liens spirituels
+- Guide de développement
+- Déploiement et dépannage
+
+## 🚀 Démarrage rapide
+
+### Prérequis
+
+- Node.js 18+
+- Compte Supabase configuré
+
+### Installation
 
 ```bash
+# Installer les dépendances
+npm install
+
+# Configurer les variables d'environnement
+# Créer .env.local avec :
+# NEXT_PUBLIC_SUPABASE_URL=votre_url
+# NEXT_PUBLIC_SUPABASE_ANON_KEY=votre_cle
+
+# Lancer le serveur de développement
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Ouvrir [http://localhost:3000](http://localhost:3000) dans le navigateur.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📖 Documentation supplémentaire
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- [Documentation des liens spirituels](./DOCUMENTATION_LIENS_SPIRITUELS.md) - Système de connexions entre éléments
+- [Documentation complète](./DOCUMENTATION-COMPLETE.md) - Guide exhaustif du projet
 
-## Learn More
+## 🛠️ Scripts disponibles
 
-To learn more about Next.js, take a look at the following resources:
+- `npm run dev` - Serveur de développement
+- `npm run build` - Build de production
+- `npm run start` - Serveur de production
+- `npm run lint` - Linter ESLint
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## ⚠️ Important - Configuration GitHub
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**Avant de commencer à travailler, lisez la section "Configuration GitHub" dans la [documentation complète](./DOCUMENTATION-COMPLETE.md)**.
 
-## Deploy on Vercel
+Les deux projets (travail et sauvegarde) pointent actuellement vers le même dépôt GitHub. Il est **fortement recommandé** de :
+1. Créer un nouveau dépôt GitHub pour le projet de travail
+2. OU travailler sur une branche séparée
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Voir la documentation complète pour les détails.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🎯 Projet de travail
+
+**Chemin :** `/Users/aymeri/projets/carnet-spirituel`
+
+C'est sur ce projet que vous devez travailler dans votre IDE.
+
+## 📝 Stack technique
+
+- **Framework** : Next.js 15.3.2 (App Router)
+- **Langage** : TypeScript 5
+- **UI** : React 19.0.0
+- **Styling** : CSS pur + Tailwind CSS 4.1.7
+- **Base de données** : Supabase (PostgreSQL)
+- **Authentification** : Supabase Auth
+- **Icônes** : Lucide React
+- **Dates** : date-fns avec locale française
+- **Visualisation** : D3.js pour la vue constellation
+
+## 🔗 Liens utiles
+
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Supabase Documentation](https://supabase.com/docs)
+- [React Documentation](https://react.dev)
+
+---
+
+**Version :** 0.1.0  
+**Dernière mise à jour :** 14 décembre 2025
