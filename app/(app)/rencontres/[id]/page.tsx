@@ -4,7 +4,7 @@ import { use, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/app/lib/supabase'
-import { Calendar, MapPin, User, Users, Heart, Edit, Trash2, ArrowLeft, Clock, LinkIcon } from 'lucide-react'
+import { Calendar, MapPin, User, Users, Heart, Edit, Trash2, ArrowLeft, Clock, LinkIcon, Plus, CheckCircle, TrendingUp } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import LinksList from '@/app/components/LinksList'
@@ -25,6 +25,14 @@ interface Rencontre {
   updated_at: string | null
 }
 
+interface Suivi {
+  id: string
+  date: string
+  notes: string
+  evolution: string | null
+  created_at: string
+}
+
 const contexteLabels: Record<string, string> = {
   rue: 'Dans la rue',
   paroisse: 'À la paroisse',
@@ -34,10 +42,21 @@ const contexteLabels: Record<string, string> = {
   autre: 'Autre'
 }
 
+const evolutionLabels: Record<string, { label: string; color: string }> = {
+  mes_nouvelles: { label: 'J\'ai donné des nouvelles', color: '#F97316' },
+  ses_nouvelles: { label: 'J\'ai reçu des nouvelles', color: '#0EA5E9' },
+  rencontre: { label: 'Nouvelle rencontre', color: '#10B981' },
+  invitation: { label: 'Invitation', color: '#8B5CF6' },
+  perdu_de_vue: { label: 'Perdu de vue', color: '#6B7280' },
+  prieres: { label: 'Prières', color: '#EC4899' },
+  autre: { label: 'Autre', color: '#6B7280' }
+}
+
 export default function RencontreDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params)
   const router = useRouter()
   const [rencontre, setRencontre] = useState<Rencontre | null>(null)
+  const [suivis, setSuivis] = useState<Suivi[]>([])
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState(false)
   const [spiritualLinks, setSpiritualLinks] = useState<any[]>([])
@@ -57,7 +76,16 @@ export default function RencontreDetailPage({ params }: { params: Promise<{ id: 
 
       if (error) throw error
       setRencontre(data)
-      
+
+      const { data: suivisData, error: suivisError } = await supabase
+        .from('suivis_rencontre')
+        .select('*')
+        .eq('rencontre_id', resolvedParams.id)
+        .order('date', { ascending: false })
+
+      if (suivisError) throw suivisError
+      setSuivis(suivisData || [])
+
       // Charger les liens spirituels
       const { data: { user } } = await supabase.auth.getUser()
       if (user?.id) {
@@ -74,7 +102,7 @@ export default function RencontreDetailPage({ params }: { params: Promise<{ id: 
 
   const loadAllEntries = async (userId: string) => {
     const allEntriesData: any[] = []
-    
+
     const tables = [
       { name: 'graces', type: 'grace' },
       { name: 'prieres', type: 'priere' },
@@ -82,18 +110,18 @@ export default function RencontreDetailPage({ params }: { params: Promise<{ id: 
       { name: 'paroles_connaissance', type: 'parole' },
       { name: 'rencontres_missionnaires', type: 'rencontre' }
     ]
-    
+
     for (const table of tables) {
       const { data } = await supabase
         .from(table.name)
         .select('*')
         .eq('user_id', userId)
-      
+
       if (data) {
         allEntriesData.push(...data.map(item => ({ ...item, type: table.type })))
       }
     }
-    
+
     return allEntriesData
   }
 
@@ -120,7 +148,7 @@ export default function RencontreDetailPage({ params }: { params: Promise<{ id: 
   if (loading) {
     return (
       <div style={{
-        minHeight: '100vh',        display: 'flex',
+        minHeight: '100vh', display: 'flex',
         alignItems: 'center',
         justifyContent: 'center'
       }}>
@@ -152,9 +180,11 @@ export default function RencontreDetailPage({ params }: { params: Promise<{ id: 
 
   if (!rencontre) return null
 
+  const latestSuivi = suivis[0]
+
   return (
     <div style={{
-      minHeight: '100vh',      padding: '2rem 1rem'
+      minHeight: '100vh', padding: '2rem 1rem'
     }}>
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
         <div style={{
@@ -352,25 +382,31 @@ export default function RencontreDetailPage({ params }: { params: Promise<{ id: 
                 </p>
               </div>
 
-              <div style={{
-                background: '#FFF7ED',
-                borderRadius: '0.75rem',
-                padding: '1rem'
-              }}>
+              {latestSuivi && latestSuivi.evolution && evolutionLabels[latestSuivi.evolution] && (
                 <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  marginBottom: '0.5rem',
-                  color: '#92400E'
+                  background: evolutionLabels[latestSuivi.evolution].color + '20',
+                  borderRadius: '0.75rem',
+                  padding: '1rem'
                 }}>
-                  <Clock size={20} />
-                  <span style={{ fontWeight: '500' }}>Ajouté</span>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    marginBottom: '0.5rem',
+                    color: evolutionLabels[latestSuivi.evolution].color
+                  }}>
+                    <TrendingUp size={20} />
+                    <span style={{ fontWeight: '500' }}>Dernière évolution</span>
+                  </div>
+                  <p style={{
+                    color: evolutionLabels[latestSuivi.evolution].color,
+                    fontSize: '1.125rem',
+                    fontWeight: '600'
+                  }}>
+                    {evolutionLabels[latestSuivi.evolution].label}
+                  </p>
                 </div>
-                <p style={{ color: '#451A03', fontSize: '1.125rem' }}>
-                  {format(new Date(rencontre.created_at), 'd MMM yyyy', { locale: fr })}
-                </p>
-              </div>
+              )}
             </div>
 
             {/* Fruits */}
@@ -388,7 +424,7 @@ export default function RencontreDetailPage({ params }: { params: Promise<{ id: 
                   <Heart size={20} />
                   Fruits de la rencontre
                 </h3>
-                
+
                 {rencontre.fruit_immediat && (
                   <div style={{
                     background: '#FFFBEB',
@@ -444,50 +480,124 @@ export default function RencontreDetailPage({ params }: { params: Promise<{ id: 
               </div>
             )}
 
-            {/* Actions suggérées */}
-            <div style={{
-              textAlign: 'center',
-              padding: '2rem',
-              background: '#FFF7ED',
-              borderRadius: '0.75rem',
-              border: '2px dashed #FED7AA'
-            }}>
-              <p style={{
-                color: '#92400E',
-                marginBottom: '1rem',
-                fontSize: '1.125rem'
+            {/* Section des suivis */}
+            <div>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '1.5rem'
               }}>
-                Avez-vous des nouvelles de {rencontre.personne_prenom} ?
-              </p>
-              <Link
-                href={`/rencontres/${rencontre.id}/modifier`}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  background: '#C65D00',
-                  color: 'white',
-                  padding: '0.75rem 1.5rem',
-                  borderRadius: '0.5rem',
-                  textDecoration: 'none',
-                  fontWeight: '500',
-                  transition: 'all 0.2s',
-                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#D97706'
-                  e.currentTarget.style.transform = 'translateY(-1px)'
-                  e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#C65D00'
-                  e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)'
-                }}
-              >
-                <Edit size={20} />
-                Ajouter un suivi
-              </Link>
+                <h2 style={{
+                  fontSize: '1.5rem',
+                  fontWeight: '600',
+                  color: '#451A03'
+                }}>
+                  Suivis ({suivis.length})
+                </h2>
+                <Link
+                  href={`/rencontres/${rencontre.id}/suivi`}
+                  style={{
+                    background: '#F97316',
+                    color: 'white',
+                    padding: '0.75rem 1.5rem',
+                    borderRadius: '0.5rem',
+                    textDecoration: 'none',
+                    fontWeight: '500',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    boxShadow: '0 2px 4px rgba(249, 115, 22, 0.2)',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#EA580C'
+                    e.currentTarget.style.transform = 'translateY(-1px)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#F97316'
+                    e.currentTarget.style.transform = 'translateY(0)'
+                  }}
+                >
+                  <Plus size={20} />
+                  Ajouter un suivi
+                </Link>
+              </div>
+
+              {suivis.length === 0 ? (
+                <div style={{
+                  background: '#FFF7ED',
+                  borderRadius: '0.75rem',
+                  padding: '2rem',
+                  textAlign: 'center',
+                  border: '2px dashed #FED7AA'
+                }}>
+                  <p style={{ color: '#92400E' }}>
+                    Aucun suivi enregistré pour cette rencontre.<br />
+                    Avez-vous eu des nouvelles récemment ?
+                  </p>
+                </div>
+              ) : (
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '1rem'
+                }}>
+                  {suivis.map((suivi, index) => (
+                    <div
+                      key={suivi.id}
+                      style={{
+                        background: 'white',
+                        border: '2px solid #E5E7EB',
+                        borderRadius: '0.75rem',
+                        padding: '1.5rem',
+                        animation: `fadeIn 0.6s ease-out ${index * 0.1}s both`
+                      }}
+                    >
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-start',
+                        marginBottom: '1rem'
+                      }}>
+                        <div>
+                          <p style={{
+                            fontSize: '0.875rem',
+                            color: '#6B7280',
+                            marginBottom: '0.25rem'
+                          }}>
+                            {format(new Date(suivi.date), 'EEEE d MMMM yyyy', { locale: fr })}
+                          </p>
+                          {suivi.evolution && (
+                            <span style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.25rem',
+                              background: (evolutionLabels[suivi.evolution]?.color || '#6B7280') + '20',
+                              color: evolutionLabels[suivi.evolution]?.color || '#6B7280',
+                              padding: '0.25rem 0.75rem',
+                              borderRadius: '1rem',
+                              fontSize: '0.875rem',
+                              fontWeight: '500'
+                            }}>
+                              {(suivi.evolution === 'rencontre' || suivi.evolution === 'invitation') &&
+                                <CheckCircle size={14} />
+                              }
+                              {evolutionLabels[suivi.evolution]?.label || suivi.evolution}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <p style={{
+                        color: '#374151',
+                        lineHeight: '1.6'
+                      }}>
+                        {suivi.notes}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Citation en bas */}
@@ -522,103 +632,103 @@ export default function RencontreDetailPage({ params }: { params: Promise<{ id: 
           link.element_source_id === rencontre.id ||
           link.element_cible_id === rencontre.id
         ).length > 0 && (
-          <>
-            {/* Espace de respiration */}
-            <div style={{ height: '2rem' }} />
-            
-            {/* Container connexions */}
-            <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-              <div style={{
-                background: 'white',
-                borderRadius: '1rem',
-                overflow: 'hidden',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-                border: '1px solid rgba(198, 93, 0, 0.1)'
-              }}>
-                {/* Barre supérieure décorative */}
+            <>
+              {/* Espace de respiration */}
+              <div style={{ height: '2rem' }} />
+
+              {/* Container connexions */}
+              <div style={{ maxWidth: '800px', margin: '0 auto' }}>
                 <div style={{
-                  height: '4px',
-                  background: 'linear-gradient(90deg, #FED7AA 0%, #FDBA74 50%, #FED7AA 100%)'
-                }} />
-                
-                <div style={{
-                  padding: '1.5rem',
-                  background: '#FFF7ED'
+                  background: 'white',
+                  borderRadius: '1rem',
+                  overflow: 'hidden',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+                  border: '1px solid rgba(198, 93, 0, 0.1)'
                 }}>
-                  <h3 style={{ 
-                    fontSize: '1.2rem', 
-                    fontWeight: '600',
-                    color: '#451A03',
-                    marginBottom: '1rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem'
+                  {/* Barre supérieure décorative */}
+                  <div style={{
+                    height: '4px',
+                    background: 'linear-gradient(90deg, #FED7AA 0%, #FDBA74 50%, #FED7AA 100%)'
+                  }} />
+
+                  <div style={{
+                    padding: '1.5rem',
+                    background: '#FFF7ED'
                   }}>
-                    🔗 Connexions spirituelles
-                  </h3>
-                  
-                  <LinksList 
-                    entryId={rencontre.id}
-                    links={spiritualLinks}
-                    entries={allEntries}
-                    onViewEntry={(entryId) => {
-                      const entry = allEntries.find(e => e.id === entryId)
-                      if (entry) {
-                        router.push(`/${entry.type}s/${entry.id}`)
-                      }
-                    }}
-                    onDeleteLink={async (linkId) => {
-                      const { error } = await supabase
-                        .from('liens_spirituels')
-                        .delete()
-                        .eq('id', linkId)
-                      
-                      if (!error) {
-                        const { data: { user } } = await supabase.auth.getUser()
-                        if (user?.id) {
-                          const updatedLinks = await loadUserSpiritualLinks(user.id)
-                          setSpiritualLinks(updatedLinks)
-                        }
-                      }
-                    }}
-                  />
-                  
-                  <button 
-                    onClick={() => router.push(`/relecture?mode=atelier&source=${rencontre.id}&sourceType=rencontre`)}
-                    style={{
-                      marginTop: '1rem',
-                      padding: '0.75rem 1.5rem',
-                      background: '#C65D00',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '0.5rem',
-                      cursor: 'pointer',
-                      fontSize: '0.875rem',
-                      fontWeight: '500',
-                      transition: 'all 0.2s',
-                      display: 'inline-flex',
+                    <h3 style={{
+                      fontSize: '1.2rem',
+                      fontWeight: '600',
+                      color: '#451A03',
+                      marginBottom: '1rem',
+                      display: 'flex',
                       alignItems: 'center',
                       gap: '0.5rem'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = '#D97706'
-                      e.currentTarget.style.transform = 'translateY(-2px)'
-                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(198, 93, 0, 0.3)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = '#C65D00'
-                      e.currentTarget.style.transform = 'translateY(0)'
-                      e.currentTarget.style.boxShadow = 'none'
-                    }}
-                  >
-                    <LinkIcon size={16} />
-                    Créer une nouvelle connexion
-                  </button>
+                    }}>
+                      🔗 Connexions spirituelles
+                    </h3>
+
+                    <LinksList
+                      entryId={rencontre.id}
+                      links={spiritualLinks}
+                      entries={allEntries}
+                      onViewEntry={(entryId) => {
+                        const entry = allEntries.find(e => e.id === entryId)
+                        if (entry) {
+                          router.push(`/${entry.type}s/${entry.id}`)
+                        }
+                      }}
+                      onDeleteLink={async (linkId) => {
+                        const { error } = await supabase
+                          .from('liens_spirituels')
+                          .delete()
+                          .eq('id', linkId)
+
+                        if (!error) {
+                          const { data: { user } } = await supabase.auth.getUser()
+                          if (user?.id) {
+                            const updatedLinks = await loadUserSpiritualLinks(user.id)
+                            setSpiritualLinks(updatedLinks)
+                          }
+                        }
+                      }}
+                    />
+
+                    <button
+                      onClick={() => router.push(`/relecture?mode=atelier&source=${rencontre.id}&sourceType=rencontre`)}
+                      style={{
+                        marginTop: '1rem',
+                        padding: '0.75rem 1.5rem',
+                        background: '#C65D00',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '0.5rem',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem',
+                        fontWeight: '500',
+                        transition: 'all 0.2s',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#D97706'
+                        e.currentTarget.style.transform = 'translateY(-2px)'
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(198, 93, 0, 0.3)'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#C65D00'
+                        e.currentTarget.style.transform = 'translateY(0)'
+                        e.currentTarget.style.boxShadow = 'none'
+                      }}
+                    >
+                      <LinkIcon size={16} />
+                      Créer une nouvelle connexion
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </>
-        )}
+            </>
+          )}
       </div>
     </div>
   )
