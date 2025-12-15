@@ -4,7 +4,8 @@ import { use, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/app/lib/supabase'
-import { Calendar, Book, Heart, User, Sparkles, ArrowLeft, Save } from 'lucide-react'
+import { Calendar, Book, Heart, User, Sparkles, ArrowLeft, Save, BookOpen } from 'lucide-react'
+import BibleSearch from '@/app/components/BibleSearch'
 
 interface Ecriture {
   id: string
@@ -33,6 +34,7 @@ export default function ModifierEcriturePage({ params }: { params: Promise<{ id:
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [showBibleSearch, setShowBibleSearch] = useState(false)
 
   const contexteOptions = [
     { value: 'messe', label: 'Messe' },
@@ -55,7 +57,7 @@ export default function ModifierEcriturePage({ params }: { params: Promise<{ id:
         .single()
 
       if (error) throw error
-      
+
       setEcriture(data)
       setReference(data.reference)
       setTexteComplet(data.texte_complet)
@@ -75,7 +77,7 @@ export default function ModifierEcriturePage({ params }: { params: Promise<{ id:
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!reference.trim()) {
       setError('Veuillez indiquer la référence biblique')
       return
@@ -98,7 +100,7 @@ export default function ModifierEcriturePage({ params }: { params: Promise<{ id:
           traduction: traduction.trim(),
           contexte,
           date_reception: dateReception,
-          ce_qui_ma_touche: ceQuiMaTouche.trim() || null,
+          ce_qui_ma_touche: ceQuiMaTouche.trim() || '',
           pour_qui: pourQui.trim() || 'moi',
           fruits: fruits ? fruits.split(',').map(f => f.trim()).filter(f => f) : []
         })
@@ -113,6 +115,26 @@ export default function ModifierEcriturePage({ params }: { params: Promise<{ id:
     } finally {
       setSaving(false)
     }
+  }
+
+  const handleBibleImport = ({ text, reference: importedReference }: { text: string; reference: string }) => {
+    // Formater le texte avec la référence à la fin
+    const formattedText = `${text} (${importedReference})`
+
+    // Ajouter à la suite du texte existant avec un saut de ligne
+    const newText = texteComplet
+      ? `${texteComplet}\n\n${formattedText}`
+      : formattedText
+
+    // Ajouter la référence à la liste des références (séparées par ; )
+    const newReference = reference
+      ? `${reference} ; ${importedReference}`
+      : importedReference
+
+    setReference(newReference)
+    setTexteComplet(newText)
+    setTraduction('Bible liturgique AELF')
+    setShowBibleSearch(false)
   }
 
   if (loading) {
@@ -284,6 +306,44 @@ export default function ModifierEcriturePage({ params }: { params: Promise<{ id:
                   onBlur={(e) => e.target.style.borderColor = '#D1FAE5'}
                 />
               </div>
+            </div>
+
+            {/* Bouton Recherche Bible */}
+            <div style={{ marginBottom: '1.5rem' }}>
+              <button
+                type="button"
+                onClick={() => setShowBibleSearch(true)}
+                style={{
+                  width: '100%',
+                  padding: '1rem',
+                  background: '#D1FAE5',
+                  border: '2px solid #A7F3D0',
+                  borderRadius: '0.75rem',
+                  color: '#064E3B',
+                  fontWeight: '600',
+                  fontSize: '1rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.75rem',
+                  transition: 'all 0.2s',
+                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#A7F3D0'
+                  e.currentTarget.style.transform = 'translateY(-2px)'
+                  e.currentTarget.style.boxShadow = '0 4px 8px rgba(16, 185, 129, 0.2)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#D1FAE5'
+                  e.currentTarget.style.transform = 'translateY(0)'
+                  e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.05)'
+                }}
+              >
+                <BookOpen size={24} />
+                Rechercher dans la Bible AELF
+              </button>
             </div>
 
             {/* Texte complet */}
@@ -530,7 +590,7 @@ export default function ModifierEcriturePage({ params }: { params: Promise<{ id:
               >
                 Annuler
               </Link>
-              
+
               <button
                 type="submit"
                 disabled={saving}
@@ -571,6 +631,14 @@ export default function ModifierEcriturePage({ params }: { params: Promise<{ id:
           </form>
         </div>
       </div>
+
+      {/* Modal Bible Search */}
+      {showBibleSearch && (
+        <BibleSearch
+          onImport={handleBibleImport}
+          onCancel={() => setShowBibleSearch(false)}
+        />
+      )}
     </div>
   )
 }

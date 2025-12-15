@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/app/lib/supabase'
-import { Calendar, Book, Heart, User, Sparkles, ArrowLeft, Plus } from 'lucide-react'
+import { Calendar, Book, Heart, User, Sparkles, ArrowLeft, Plus, BookOpen } from 'lucide-react'
+import BibleSearch from '@/app/components/BibleSearch'
 
 export default function NouvelleEcriturePage() {
   const router = useRouter()
@@ -18,6 +19,7 @@ export default function NouvelleEcriturePage() {
   const [fruits, setFruits] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [showBibleSearch, setShowBibleSearch] = useState(false)
 
   const contexteOptions = [
     { value: 'messe', label: 'Messe' },
@@ -29,7 +31,7 @@ export default function NouvelleEcriturePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!reference.trim()) {
       setError('Veuillez indiquer la référence biblique')
       return
@@ -47,34 +49,56 @@ export default function NouvelleEcriturePage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Non authentifié')
 
+      // Parser les fruits correctement
+      const fruitsArray = fruits.trim()
+        ? fruits.split(',').map(f => f.trim()).filter(f => f.length > 0)
+        : []
+
+      const insertData = {
+        user_id: user.id,
+        reference: reference.trim(),
+        texte_complet: texteComplet.trim(),
+        traduction: traduction.trim(),
+        contexte,
+        date_reception: dateReception,
+        ce_qui_ma_touche: ceQuiMaTouche.trim() || '',
+        pour_qui: pourQui.trim() || 'moi',
+        fruits: fruitsArray
+      }
+
+      console.log('Données à insérer:', insertData)
+
       const { error } = await supabase
         .from('paroles_ecriture')
-        .insert({
-          user_id: user.id,
-          reference: reference.trim(),
-          texte_complet: texteComplet.trim(),
-          traduction: traduction.trim(),
-          contexte,
-          date_reception: dateReception,
-          ce_qui_ma_touche: ceQuiMaTouche.trim() || null,
-          pour_qui: pourQui.trim() || 'moi',
-          fruits: fruits ? fruits.split(',').map(f => f.trim()).filter(f => f) : []
-        })
+        .insert(insertData)
 
-      if (error) throw error
+      if (error) {
+        console.error('Erreur Supabase:', error)
+        throw new Error(error.message || 'Erreur base de données')
+      }
 
       router.push('/ecritures')
-    } catch (error) {
-      console.error('Erreur:', error)
-      setError('Une erreur est survenue lors de l\'enregistrement')
+    } catch (error: any) {
+      console.error('Erreur complète:', error)
+      setError(error?.message || 'Une erreur est survenue lors de l\'enregistrement')
     } finally {
       setSaving(false)
     }
   }
 
+  const handleBibleImport = ({ text, reference }: { text: string; reference: string }) => {
+    // Formater le texte avec la référence à la fin
+    const formattedText = `${text} (${reference})`
+
+    setReference(reference)
+    setTexteComplet(formattedText)
+    setTraduction('Bible liturgique AELF')
+    setShowBibleSearch(false)
+  }
+
   return (
     <div style={{
-      minHeight: '100vh',      padding: '2rem 1rem'
+      minHeight: '100vh', padding: '2rem 1rem'
     }}>
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
         <div style={{
@@ -208,6 +232,44 @@ export default function NouvelleEcriturePage() {
                   onBlur={(e) => e.target.style.borderColor = '#D1FAE5'}
                 />
               </div>
+            </div>
+
+            {/* Bouton Recherche Bible */}
+            <div style={{ marginBottom: '1.5rem' }}>
+              <button
+                type="button"
+                onClick={() => setShowBibleSearch(true)}
+                style={{
+                  width: '100%',
+                  padding: '1rem',
+                  background: '#D1FAE5',
+                  border: '2px solid #A7F3D0',
+                  borderRadius: '0.75rem',
+                  color: '#064E3B',
+                  fontWeight: '600',
+                  fontSize: '1rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.75rem',
+                  transition: 'all 0.2s',
+                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#A7F3D0'
+                  e.currentTarget.style.transform = 'translateY(-2px)'
+                  e.currentTarget.style.boxShadow = '0 4px 8px rgba(16, 185, 129, 0.2)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#D1FAE5'
+                  e.currentTarget.style.transform = 'translateY(0)'
+                  e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.05)'
+                }}
+              >
+                <BookOpen size={24} />
+                Rechercher dans la Bible AELF
+              </button>
             </div>
 
             {/* Texte complet */}
@@ -462,7 +524,7 @@ export default function NouvelleEcriturePage() {
               >
                 Annuler
               </Link>
-              
+
               <button
                 type="submit"
                 disabled={saving}
@@ -503,6 +565,14 @@ export default function NouvelleEcriturePage() {
           </form>
         </div>
       </div>
+
+      {/* Modal Bible Search */}
+      {showBibleSearch && (
+        <BibleSearch
+          onImport={handleBibleImport}
+          onCancel={() => setShowBibleSearch(false)}
+        />
+      )}
     </div>
   )
 }
