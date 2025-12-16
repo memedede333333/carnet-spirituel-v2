@@ -97,7 +97,8 @@ export default function BibleSearch({ onImport, onCancel }: BibleSearchProps) {
             alignItems: 'center',
             justifyContent: 'center',
             zIndex: 50,
-            padding: '1rem'
+            padding: '1rem',
+            paddingLeft: 'max(1rem, calc((100vw - 800px) / 2))'
         }}>
             <div style={{
                 background: 'white',

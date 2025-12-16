@@ -9,6 +9,7 @@ import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import LinksList from '@/app/components/LinksList'
 import { loadUserSpiritualLinks } from '@/app/lib/spiritual-links-helpers'
+import FiorettiButton from '@/app/components/FiorettiButton'
 
 interface Rencontre {
   id: string
@@ -144,6 +145,67 @@ export default function RencontreDetailPage({ params }: { params: Promise<{ id: 
       setDeleting(false)
     }
   }
+
+  // Hooks doivent être appelés avant tout return conditionnel
+  const [formattedRencontreContent, setFormattedRencontreContent] = useState('');
+
+  useEffect(() => {
+    if (!rencontre || loading) return;
+
+    const lines = [];
+
+    // Titre avec nom de la personne
+    lines.push(`🤝 Rencontre avec ${rencontre.personne_prenom}${rencontre.personne_nom ? ' ' + rencontre.personne_nom : ''}`);
+    lines.push('');
+
+    // Description
+    lines.push(rencontre.description);
+    lines.push('');
+
+    // Date, lieu et contexte
+    lines.push(`📅 ${format(new Date(rencontre.date), 'd MMMM yyyy', { locale: fr })}`);
+    lines.push(`📍 ${rencontre.lieu}`);
+    lines.push(`🏷️ ${contexteLabels[rencontre.contexte] || rencontre.contexte}`);
+    lines.push('');
+
+    // Fruits
+    if (rencontre.fruit_immediat) {
+      lines.push('🌱 Fruit immédiat');
+      lines.push(rencontre.fruit_immediat);
+      lines.push('');
+    }
+    if (rencontre.fruit_espere) {
+      lines.push('🙏 Fruit espéré');
+      lines.push(rencontre.fruit_espere);
+      lines.push('');
+    }
+
+    // Tous les suivis (du plus récent au plus ancien)
+    if (suivis && suivis.length > 0) {
+      lines.push('📰 Évolution de la rencontre');
+      lines.push('');
+
+      suivis.forEach((suivi, index) => {
+        const suiviDate = format(new Date(suivi.date), 'd MMMM yyyy', { locale: fr });
+        lines.push(`📅 ${suiviDate}`);
+
+        if (suivi.evolution && evolutionLabels[suivi.evolution]) {
+          lines.push(`✨ ${evolutionLabels[suivi.evolution].label}`);
+        }
+
+        if (suivi.notes) {
+          lines.push(suivi.notes);
+        }
+
+        // Séparateur entre suivis (sauf pour le dernier)
+        if (index < suivis.length - 1) {
+          lines.push('');
+        }
+      });
+    }
+
+    setFormattedRencontreContent(lines.join('\n'));
+  }, [rencontre, suivis, loading]);
 
   if (loading) {
     return (
@@ -624,6 +686,19 @@ export default function RencontreDetailPage({ params }: { params: Promise<{ id: 
                 Matthieu 25, 35
               </p>
             </div>
+
+            {/* Actions de partage */}
+            <div style={{
+              marginTop: '2rem',
+              display: 'flex',
+              justifyContent: 'center'
+            }}>
+              <FiorettiButton
+                element={rencontre}
+                elementType="rencontre"
+                formattedContent={formattedRencontreContent}
+              />
+            </div>
           </div>
         </div>
 
@@ -674,7 +749,7 @@ export default function RencontreDetailPage({ params }: { params: Promise<{ id: 
                       onViewEntry={(entryId) => {
                         const entry = allEntries.find(e => e.id === entryId)
                         if (entry) {
-                          router.push(`/${entry.type}s/${entry.id}`)
+                          router.push(`/ ${entry.type} s /${entry.id}`)
                         }
                       }}
                       onDeleteLink={async (linkId) => {
@@ -730,6 +805,6 @@ export default function RencontreDetailPage({ params }: { params: Promise<{ id: 
             </>
           )}
       </div>
-    </div>
+    </div >
   )
 }

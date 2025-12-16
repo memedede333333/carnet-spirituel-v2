@@ -9,6 +9,8 @@ import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import LinksList from '@/app/components/LinksList'
 import { loadUserSpiritualLinks } from '@/app/lib/spiritual-links-helpers'
+import FiorettiButton from '@/app/components/FiorettiButton'
+
 
 interface Parole {
   id: string
@@ -54,7 +56,7 @@ export default function ParoleDetailPage({ params }: { params: Promise<{ id: str
 
       if (error) throw error
       setParole(data)
-      
+
       // Charger les liens spirituels
       const { data: { user } } = await supabase.auth.getUser()
       if (user?.id) {
@@ -71,7 +73,7 @@ export default function ParoleDetailPage({ params }: { params: Promise<{ id: str
 
   const loadAllEntries = async (userId: string) => {
     const allEntriesData: any[] = []
-    
+
     const tables = [
       { name: 'graces', type: 'grace' },
       { name: 'prieres', type: 'priere' },
@@ -79,18 +81,18 @@ export default function ParoleDetailPage({ params }: { params: Promise<{ id: str
       { name: 'paroles_connaissance', type: 'parole' },
       { name: 'rencontres_missionnaires', type: 'rencontre' }
     ]
-    
+
     for (const table of tables) {
       const { data } = await supabase
         .from(table.name)
         .select('*')
         .eq('user_id', userId)
-      
+
       if (data) {
         allEntriesData.push(...data.map(item => ({ ...item, type: table.type })))
       }
     }
-    
+
     return allEntriesData
   }
 
@@ -121,10 +123,57 @@ export default function ParoleDetailPage({ params }: { params: Promise<{ id: str
     return parole.personne_destinataire || 'Pour quelqu\'un'
   }
 
+  // Hooks doivent être appelés avant tout return conditionnel
+  const [formattedParoleContent, setFormattedParoleContent] = useState('');
+
+  useEffect(() => {
+    if (!parole || loading) return;
+
+    const lines = [];
+
+    // Titre
+    lines.push(`🕊️ Parole de connaissance`);
+    lines.push('');
+
+    // Texte principal
+    lines.push(`« ${parole.texte} »`);
+    lines.push('');
+
+    // Date et contexte
+    lines.push(`📅 ${format(new Date(parole.date), 'd MMMM yyyy', { locale: fr })}`);
+    lines.push(`📍 Contexte : ${contexteLabels[parole.contexte] || parole.contexte}`);
+    if (parole.contexte_detail) {
+      lines.push(parole.contexte_detail);
+    }
+    lines.push('');
+
+    // Destinataire
+    let dest = 'Pour quelqu\'un';
+    if (parole.destinataire === 'moi') dest = 'Pour moi';
+    else if (parole.destinataire === 'inconnu') dest = 'Destinataire inconnu';
+    else if (parole.personne_destinataire) dest = `Pour ${parole.personne_destinataire}`;
+    lines.push(`👤 ${dest}`);
+
+    // Fruit constaté
+    if (parole.fruit_constate) {
+      lines.push('');
+      lines.push(`✨ Fruit constaté`);
+      lines.push(parole.fruit_constate);
+    }
+
+    // Date d'accomplissement
+    if (parole.date_accomplissement) {
+      lines.push('');
+      lines.push(`✅ Accomplie le ${format(new Date(parole.date_accomplissement), 'd MMMM yyyy', { locale: fr })}`);
+    }
+
+    setFormattedParoleContent(lines.join('\n'));
+  }, [parole, loading]);
+
   if (loading) {
     return (
       <div style={{
-        minHeight: '100vh',        display: 'flex',
+        minHeight: '100vh', display: 'flex',
         alignItems: 'center',
         justifyContent: 'center'
       }}>
@@ -145,7 +194,7 @@ export default function ParoleDetailPage({ params }: { params: Promise<{ id: str
 
   return (
     <div style={{
-      minHeight: '100vh',      padding: '2rem 1rem'
+      minHeight: '100vh', padding: '2rem 1rem'
     }}>
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
         <div style={{
@@ -462,6 +511,19 @@ export default function ParoleDetailPage({ params }: { params: Promise<{ id: str
                 Luc 12, 12
               </p>
             </div>
+
+            {/* Actions de partage */}
+            <div style={{
+              marginTop: '2rem',
+              display: 'flex',
+              justifyContent: 'center'
+            }}>
+              <FiorettiButton
+                element={parole}
+                elementType="parole"
+                formattedContent={formattedParoleContent}
+              />
+            </div>
           </div>
         </div>
 
@@ -470,103 +532,103 @@ export default function ParoleDetailPage({ params }: { params: Promise<{ id: str
           link.element_source_id === parole.id ||
           link.element_cible_id === parole.id
         ).length > 0 && (
-          <>
-            {/* Espace de respiration */}
-            <div style={{ height: '2rem' }} />
-            
-            {/* Container connexions */}
-            <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-              <div style={{
-                background: 'white',
-                borderRadius: '1rem',
-                overflow: 'hidden',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-                border: '1px solid rgba(14, 165, 233, 0.1)'
-              }}>
-                {/* Barre supérieure décorative */}
+            <>
+              {/* Espace de respiration */}
+              <div style={{ height: '2rem' }} />
+
+              {/* Container connexions */}
+              <div style={{ maxWidth: '800px', margin: '0 auto' }}>
                 <div style={{
-                  height: '4px',
-                  background: 'linear-gradient(90deg, #BAE6FD 0%, #7DD3FC 50%, #BAE6FD 100%)'
-                }} />
-                
-                <div style={{
-                  padding: '1.5rem',
-                  background: '#F0F9FF'
+                  background: 'white',
+                  borderRadius: '1rem',
+                  overflow: 'hidden',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+                  border: '1px solid rgba(14, 165, 233, 0.1)'
                 }}>
-                  <h3 style={{ 
-                    fontSize: '1.2rem', 
-                    fontWeight: '600',
-                    color: '#075985',
-                    marginBottom: '1rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem'
+                  {/* Barre supérieure décorative */}
+                  <div style={{
+                    height: '4px',
+                    background: 'linear-gradient(90deg, #BAE6FD 0%, #7DD3FC 50%, #BAE6FD 100%)'
+                  }} />
+
+                  <div style={{
+                    padding: '1.5rem',
+                    background: '#F0F9FF'
                   }}>
-                    🔗 Connexions spirituelles
-                  </h3>
-                  
-                  <LinksList 
-                    entryId={parole.id}
-                    links={spiritualLinks}
-                    entries={allEntries}
-                    onViewEntry={(entryId) => {
-                      const entry = allEntries.find(e => e.id === entryId)
-                      if (entry) {
-                        router.push(`/${entry.type}s/${entry.id}`)
-                      }
-                    }}
-                    onDeleteLink={async (linkId) => {
-                      const { error } = await supabase
-                        .from('liens_spirituels')
-                        .delete()
-                        .eq('id', linkId)
-                      
-                      if (!error) {
-                        const { data: { user } } = await supabase.auth.getUser()
-                        if (user?.id) {
-                          const updatedLinks = await loadUserSpiritualLinks(user.id)
-                          setSpiritualLinks(updatedLinks)
-                        }
-                      }
-                    }}
-                  />
-                  
-                  <button 
-                    onClick={() => router.push(`/relecture?mode=atelier&source=${parole.id}&sourceType=parole`)}
-                    style={{
-                      marginTop: '1rem',
-                      padding: '0.75rem 1.5rem',
-                      background: '#0EA5E9',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '0.5rem',
-                      cursor: 'pointer',
-                      fontSize: '0.875rem',
-                      fontWeight: '500',
-                      transition: 'all 0.2s',
-                      display: 'inline-flex',
+                    <h3 style={{
+                      fontSize: '1.2rem',
+                      fontWeight: '600',
+                      color: '#075985',
+                      marginBottom: '1rem',
+                      display: 'flex',
                       alignItems: 'center',
                       gap: '0.5rem'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = '#0284C7'
-                      e.currentTarget.style.transform = 'translateY(-2px)'
-                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(14, 165, 233, 0.3)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = '#0EA5E9'
-                      e.currentTarget.style.transform = 'translateY(0)'
-                      e.currentTarget.style.boxShadow = 'none'
-                    }}
-                  >
-                    <LinkIcon size={16} />
-                    Créer une nouvelle connexion
-                  </button>
+                    }}>
+                      🔗 Connexions spirituelles
+                    </h3>
+
+                    <LinksList
+                      entryId={parole.id}
+                      links={spiritualLinks}
+                      entries={allEntries}
+                      onViewEntry={(entryId) => {
+                        const entry = allEntries.find(e => e.id === entryId)
+                        if (entry) {
+                          router.push(`/${entry.type}s/${entry.id}`)
+                        }
+                      }}
+                      onDeleteLink={async (linkId) => {
+                        const { error } = await supabase
+                          .from('liens_spirituels')
+                          .delete()
+                          .eq('id', linkId)
+
+                        if (!error) {
+                          const { data: { user } } = await supabase.auth.getUser()
+                          if (user?.id) {
+                            const updatedLinks = await loadUserSpiritualLinks(user.id)
+                            setSpiritualLinks(updatedLinks)
+                          }
+                        }
+                      }}
+                    />
+
+                    <button
+                      onClick={() => router.push(`/relecture?mode=atelier&source=${parole.id}&sourceType=parole`)}
+                      style={{
+                        marginTop: '1rem',
+                        padding: '0.75rem 1.5rem',
+                        background: '#0EA5E9',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '0.5rem',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem',
+                        fontWeight: '500',
+                        transition: 'all 0.2s',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#0284C7'
+                        e.currentTarget.style.transform = 'translateY(-2px)'
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(14, 165, 233, 0.3)'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#0EA5E9'
+                        e.currentTarget.style.transform = 'translateY(0)'
+                        e.currentTarget.style.boxShadow = 'none'
+                      }}
+                    >
+                      <LinkIcon size={16} />
+                      Créer une nouvelle connexion
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </>
-        )}
+            </>
+          )}
       </div>
     </div>
   )

@@ -9,6 +9,7 @@ import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import LinksList from '@/app/components/LinksList'
 import { loadUserSpiritualLinks } from '@/app/lib/spiritual-links-helpers'
+import FiorettiButton from '@/app/components/FiorettiButton'
 
 interface Priere {
   id: string
@@ -108,7 +109,7 @@ export default function PriereDetailPage({ params }: { params: Promise<{ id: str
 
       if (suivisError) throw suivisError
       setSuivis(suivisData || [])
-      
+
       // Charger les liens spirituels
       const { data: { user } } = await supabase.auth.getUser()
       if (user?.id) {
@@ -125,7 +126,7 @@ export default function PriereDetailPage({ params }: { params: Promise<{ id: str
 
   const loadAllEntries = async (userId: string) => {
     const allEntriesData: any[] = []
-    
+
     const tables = [
       { name: 'graces', type: 'grace' },
       { name: 'prieres', type: 'priere' },
@@ -133,18 +134,18 @@ export default function PriereDetailPage({ params }: { params: Promise<{ id: str
       { name: 'paroles_connaissance', type: 'parole' },
       { name: 'rencontres_missionnaires', type: 'rencontre' }
     ]
-    
+
     for (const table of tables) {
       const { data } = await supabase
         .from(table.name)
         .select('*')
         .eq('user_id', userId)
-      
+
       if (data) {
         allEntriesData.push(...data.map(item => ({ ...item, type: table.type })))
       }
     }
-    
+
     return allEntriesData
   }
 
@@ -168,10 +169,73 @@ export default function PriereDetailPage({ params }: { params: Promise<{ id: str
     }
   }
 
+  // Hooks doivent être appelés avant tout return conditionnel
+  const [formattedContentForModal, setFormattedContentForModal] = useState('');
+  const latestSuivi = suivis[0];
+
+  useEffect(() => {
+    if (!priere || loading) return;
+
+    const lines = [];
+
+    // En-tête
+    lines.push(`🙏 Prière pour ${priere.personne_prenom}${priere.personne_nom ? ' ' + priere.personne_nom : ''}`);
+    if (priere.sujet) lines.push(priere.sujet);
+    lines.push('');
+
+    // Date et fréquence
+    lines.push(`📅 Nous prions depuis le ${format(new Date(priere.date), 'd MMMM yyyy', { locale: fr })} (${priere.nombre_fois} fois)`);
+    lines.push('');
+
+    // Contexte/Détails
+    if (priere.sujet_detail) {
+      lines.push('🔍 Contexte');
+      lines.push(priere.sujet_detail);
+      lines.push('');
+    }
+
+    // Notes personnelles
+    if (priere.notes) {
+      lines.push('💭 Note personnelle');
+      lines.push(priere.notes);
+      lines.push('');
+    }
+
+    // Tous les suivis (du plus récent au plus ancien)
+    if (suivis && suivis.length > 0) {
+      lines.push('📰 Évolution de la prière');
+      lines.push('');
+
+      suivis.forEach((suivi, index) => {
+        const suiviDate = format(new Date(suivi.date), 'd MMMM yyyy', { locale: fr });
+        lines.push(`📅 ${suiviDate}`);
+
+        if (suivi.evolution) {
+          const evoLabel = evolutionLabels[suivi.evolution]?.label;
+          if (evoLabel) {
+            lines.push(`✨ ${evoLabel}`);
+          }
+        }
+
+        if (suivi.notes) {
+          lines.push(suivi.notes);
+        }
+
+        // Séparateur entre suivis (sauf pour le dernier)
+        if (index < suivis.length - 1) {
+          lines.push('');
+        }
+      });
+    }
+
+    setFormattedContentForModal(lines.join('\n'));
+  }, [priere, suivis, loading]);
+
+
   if (loading) {
     return (
       <div style={{
-        minHeight: '100vh',        display: 'flex',
+        minHeight: '100vh', display: 'flex',
         alignItems: 'center',
         justifyContent: 'center'
       }}>
@@ -192,11 +256,11 @@ export default function PriereDetailPage({ params }: { params: Promise<{ id: str
 
   const TypeIcon = typeLabels[priere.type].icon
   const colors = typeColors[priere.type]
-  const latestSuivi = suivis[0]
+
 
   return (
     <div style={{
-      minHeight: '100vh',      padding: '2rem 1rem'
+      minHeight: '100vh', padding: '2rem 1rem'
     }}>
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
         <div style={{
@@ -408,7 +472,7 @@ export default function PriereDetailPage({ params }: { params: Promise<{ id: str
                     <TrendingUp size={20} />
                     <span style={{ fontWeight: '500' }}>Dernière évolution</span>
                   </div>
-                  <p style={{ 
+                  <p style={{
                     color: evolutionLabels[latestSuivi.evolution].color,
                     fontSize: '1.125rem',
                     fontWeight: '600'
@@ -534,7 +598,7 @@ export default function PriereDetailPage({ params }: { params: Promise<{ id: str
                               fontSize: '0.875rem',
                               fontWeight: '500'
                             }}>
-                              {(suivi.evolution === 'gueri' || suivi.evolution === 'guerison_partielle') && 
+                              {(suivi.evolution === 'gueri' || suivi.evolution === 'guerison_partielle') &&
                                 <CheckCircle size={14} />
                               }
                               {evolutionLabels[suivi.evolution].label}
@@ -565,6 +629,19 @@ export default function PriereDetailPage({ params }: { params: Promise<{ id: str
                 </div>
               )}
             </div>
+
+            {/* Actions de partage */}
+            <div style={{
+              marginTop: '2rem',
+              display: 'flex',
+              justifyContent: 'center'
+            }}>
+              <FiorettiButton
+                element={priere}
+                elementType="priere"
+                formattedContent={formattedContentForModal}
+              />
+            </div>
           </div>
         </div>
 
@@ -573,103 +650,103 @@ export default function PriereDetailPage({ params }: { params: Promise<{ id: str
           link.element_source_id === priere.id ||
           link.element_cible_id === priere.id
         ).length > 0 && (
-          <>
-            {/* Espace de respiration */}
-            <div style={{ height: '2rem' }} />
-            
-            {/* Container connexions */}
-            <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-              <div style={{
-                background: 'white',
-                borderRadius: '1rem',
-                overflow: 'hidden',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-                border: '1px solid rgba(99, 102, 241, 0.1)'
-              }}>
-                {/* Barre supérieure décorative */}
+            <>
+              {/* Espace de respiration */}
+              <div style={{ height: '2rem' }} />
+
+              {/* Container connexions */}
+              <div style={{ maxWidth: '800px', margin: '0 auto' }}>
                 <div style={{
-                  height: '4px',
-                  background: 'linear-gradient(90deg, #C7D2FE 0%, #A5B4FC 50%, #C7D2FE 100%)'
-                }} />
-                
-                <div style={{
-                  padding: '1.5rem',
-                  background: '#F8F9FF'
+                  background: 'white',
+                  borderRadius: '1rem',
+                  overflow: 'hidden',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+                  border: '1px solid rgba(99, 102, 241, 0.1)'
                 }}>
-                  <h3 style={{ 
-                    fontSize: '1.2rem', 
-                    fontWeight: '600',
-                    color: '#312E81',
-                    marginBottom: '1rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem'
+                  {/* Barre supérieure décorative */}
+                  <div style={{
+                    height: '4px',
+                    background: 'linear-gradient(90deg, #C7D2FE 0%, #A5B4FC 50%, #C7D2FE 100%)'
+                  }} />
+
+                  <div style={{
+                    padding: '1.5rem',
+                    background: '#F8F9FF'
                   }}>
-                    🔗 Connexions spirituelles
-                  </h3>
-                  
-                  <LinksList 
-                    entryId={priere.id}
-                    links={spiritualLinks}
-                    entries={allEntries}
-                    onViewEntry={(entryId) => {
-                      const entry = allEntries.find(e => e.id === entryId)
-                      if (entry) {
-                        router.push(`/${entry.type}s/${entry.id}`)
-                      }
-                    }}
-                    onDeleteLink={async (linkId) => {
-                      const { error } = await supabase
-                        .from('liens_spirituels')
-                        .delete()
-                        .eq('id', linkId)
-                      
-                      if (!error) {
-                        const { data: { user } } = await supabase.auth.getUser()
-                        if (user?.id) {
-                          const updatedLinks = await loadUserSpiritualLinks(user.id)
-                          setSpiritualLinks(updatedLinks)
-                        }
-                      }
-                    }}
-                  />
-                  
-                  <button 
-                    onClick={() => router.push(`/relecture?mode=atelier&source=${priere.id}&sourceType=priere`)}
-                    style={{
-                      marginTop: '1rem',
-                      padding: '0.75rem 1.5rem',
-                      background: '#6366F1',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '0.5rem',
-                      cursor: 'pointer',
-                      fontSize: '0.875rem',
-                      fontWeight: '500',
-                      transition: 'all 0.2s',
-                      display: 'inline-flex',
+                    <h3 style={{
+                      fontSize: '1.2rem',
+                      fontWeight: '600',
+                      color: '#312E81',
+                      marginBottom: '1rem',
+                      display: 'flex',
                       alignItems: 'center',
                       gap: '0.5rem'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = '#4F46E5'
-                      e.currentTarget.style.transform = 'translateY(-2px)'
-                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(99, 102, 241, 0.3)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = '#6366F1'
-                      e.currentTarget.style.transform = 'translateY(0)'
-                      e.currentTarget.style.boxShadow = 'none'
-                    }}
-                  >
-                    <LinkIcon size={16} />
-                    Créer une nouvelle connexion
-                  </button>
+                    }}>
+                      🔗 Connexions spirituelles
+                    </h3>
+
+                    <LinksList
+                      entryId={priere.id}
+                      links={spiritualLinks}
+                      entries={allEntries}
+                      onViewEntry={(entryId) => {
+                        const entry = allEntries.find(e => e.id === entryId)
+                        if (entry) {
+                          router.push(`/${entry.type}s/${entry.id}`)
+                        }
+                      }}
+                      onDeleteLink={async (linkId) => {
+                        const { error } = await supabase
+                          .from('liens_spirituels')
+                          .delete()
+                          .eq('id', linkId)
+
+                        if (!error) {
+                          const { data: { user } } = await supabase.auth.getUser()
+                          if (user?.id) {
+                            const updatedLinks = await loadUserSpiritualLinks(user.id)
+                            setSpiritualLinks(updatedLinks)
+                          }
+                        }
+                      }}
+                    />
+
+                    <button
+                      onClick={() => router.push(`/relecture?mode=atelier&source=${priere.id}&sourceType=priere`)}
+                      style={{
+                        marginTop: '1rem',
+                        padding: '0.75rem 1.5rem',
+                        background: '#6366F1',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '0.5rem',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem',
+                        fontWeight: '500',
+                        transition: 'all 0.2s',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#4F46E5'
+                        e.currentTarget.style.transform = 'translateY(-2px)'
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(99, 102, 241, 0.3)'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#6366F1'
+                        e.currentTarget.style.transform = 'translateY(0)'
+                        e.currentTarget.style.boxShadow = 'none'
+                      }}
+                    >
+                      <LinkIcon size={16} />
+                      Créer une nouvelle connexion
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </>
-        )}
+            </>
+          )}
       </div>
     </div>
   )

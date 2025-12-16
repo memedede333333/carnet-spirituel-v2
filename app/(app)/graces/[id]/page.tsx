@@ -9,6 +9,7 @@ import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import LinksList from '@/app/components/LinksList'
 import { loadUserSpiritualLinks } from '@/app/lib/spiritual-links-helpers'
+import FiorettiButton from '@/app/components/FiorettiButton'
 
 interface Grace {
   id: string
@@ -44,7 +45,7 @@ export default function GraceDetailPage({ params }: { params: Promise<{ id: stri
 
       if (error) throw error
       setGrace(data)
-      
+
       // Charger les liens spirituels
       const { data: { user } } = await supabase.auth.getUser()
       if (user?.id) {
@@ -61,7 +62,7 @@ export default function GraceDetailPage({ params }: { params: Promise<{ id: stri
 
   const loadAllEntries = async (userId: string) => {
     const allEntriesData: any[] = []
-    
+
     const tables = [
       { name: 'graces', type: 'grace' },
       { name: 'prieres', type: 'priere' },
@@ -69,18 +70,18 @@ export default function GraceDetailPage({ params }: { params: Promise<{ id: stri
       { name: 'paroles_connaissance', type: 'parole' },
       { name: 'rencontres_missionnaires', type: 'rencontre' }
     ]
-    
+
     for (const table of tables) {
       const { data } = await supabase
         .from(table.name)
         .select('*')
         .eq('user_id', userId)
-      
+
       if (data) {
         allEntriesData.push(...data.map(item => ({ ...item, type: table.type })))
       }
     }
-    
+
     return allEntriesData
   }
 
@@ -104,7 +105,39 @@ export default function GraceDetailPage({ params }: { params: Promise<{ id: stri
     }
   }
 
+  // Hooks doivent être appelés avant tout return conditionnel
+  const [formattedGraceContent, setFormattedGraceContent] = useState('');
+
+  useEffect(() => {
+    if (!grace || loading) return;
+
+    const lines = [];
+
+    // Titre
+    lines.push(`✨ Grâce reçue`);
+    lines.push('');
+
+    // Texte principal
+    lines.push(grace.texte);
+    lines.push('');
+
+    // Date et lieu
+    lines.push(`📅 ${format(new Date(grace.date), 'd MMMM yyyy', { locale: fr })}`);
+    if (grace.lieu) {
+      lines.push(`📍 ${grace.lieu}`);
+    }
+
+    // Tags
+    if (grace.tags && grace.tags.length > 0) {
+      lines.push('');
+      lines.push(`🏷️ ${grace.tags.join(' • ')}`);
+    }
+
+    setFormattedGraceContent(lines.join('\n'));
+  }, [grace, loading]);
+
   if (loading) {
+
     return (
       <div style={{
         minHeight: '100vh',
@@ -336,7 +369,7 @@ export default function GraceDetailPage({ params }: { params: Promise<{ id: stri
                 </div>
                 <p style={{ color: '#78350F', fontSize: '1.125rem' }}>
                   {grace.visibilite === 'prive' ? 'Privé' :
-                   grace.visibilite === 'anonyme' ? 'Anonyme' : 'Public'}
+                    grace.visibilite === 'anonyme' ? 'Anonyme' : 'Public'}
                 </p>
               </div>
 
@@ -356,13 +389,13 @@ export default function GraceDetailPage({ params }: { params: Promise<{ id: stri
                     <Share2 size={20} />
                     <span style={{ fontWeight: '500' }}>Partage</span>
                   </div>
-                  <p style={{ 
+                  <p style={{
                     color: grace.statut_partage === 'approuve' ? '#059669' : '#78350F',
                     fontSize: '1.125rem',
                     fontWeight: grace.statut_partage === 'approuve' ? '600' : '400'
                   }}>
                     {grace.statut_partage === 'propose' ? 'Proposé au partage' :
-                     grace.statut_partage === 'approuve' ? 'Partagé avec la communauté' : 'Refusé'}
+                      grace.statut_partage === 'approuve' ? 'Partagé avec la communauté' : 'Refusé'}
                   </p>
                 </div>
               )}
@@ -411,41 +444,18 @@ export default function GraceDetailPage({ params }: { params: Promise<{ id: stri
               </div>
             )}
 
-            {/* Actions de partage si privé */}
-            {grace.visibilite !== 'prive' && grace.statut_partage === 'brouillon' && (
-              <div style={{
-                marginTop: '2rem',
-                padding: '1.5rem',
-                background: '#FEF3C7',
-                borderRadius: '0.75rem',
-                textAlign: 'center'
-              }}>
-                <p style={{
-                  color: '#92400E',
-                  marginBottom: '1rem'
-                }}>
-                  Cette grâce peut être partagée pour édifier la communauté
-                </p>
-                <button
-                  style={{
-                    background: '#FCD34D',
-                    color: '#78350F',
-                    padding: '0.75rem 1.5rem',
-                    borderRadius: '0.5rem',
-                    border: 'none',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  <Share2 size={20} />
-                  Proposer au partage
-                </button>
-              </div>
-            )}
+            {/* Actions de partage */}
+            <div style={{
+              marginTop: '2rem',
+              display: 'flex',
+              justifyContent: 'center'
+            }}>
+              <FiorettiButton
+                element={grace}
+                elementType="grace"
+                formattedContent={formattedGraceContent}
+              />
+            </div>
           </div>
         </div>
 
@@ -454,103 +464,103 @@ export default function GraceDetailPage({ params }: { params: Promise<{ id: stri
           link.element_source_id === grace.id ||
           link.element_cible_id === grace.id
         ).length > 0 && (
-          <>
-            {/* Espace de respiration */}
-            <div style={{ height: '2rem' }} />
-            
-            {/* Container connexions */}
-            <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-              <div style={{
-                background: 'white',
-                borderRadius: '1rem',
-                overflow: 'hidden',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-                border: '1px solid rgba(245, 158, 11, 0.1)'
-              }}>
-                {/* Barre supérieure décorative */}
+            <>
+              {/* Espace de respiration */}
+              <div style={{ height: '2rem' }} />
+
+              {/* Container connexions */}
+              <div style={{ maxWidth: '800px', margin: '0 auto' }}>
                 <div style={{
-                  height: '4px',
-                  background: 'linear-gradient(90deg, #FDE68A 0%, #FCD34D 50%, #FDE68A 100%)'
-                }} />
-                
-                <div style={{
-                  padding: '1.5rem',
-                  background: '#FFFBEB'
+                  background: 'white',
+                  borderRadius: '1rem',
+                  overflow: 'hidden',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+                  border: '1px solid rgba(245, 158, 11, 0.1)'
                 }}>
-                  <h3 style={{ 
-                    fontSize: '1.2rem', 
-                    fontWeight: '600',
-                    color: '#78350F',
-                    marginBottom: '1rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem'
+                  {/* Barre supérieure décorative */}
+                  <div style={{
+                    height: '4px',
+                    background: 'linear-gradient(90deg, #FDE68A 0%, #FCD34D 50%, #FDE68A 100%)'
+                  }} />
+
+                  <div style={{
+                    padding: '1.5rem',
+                    background: '#FFFBEB'
                   }}>
-                    🔗 Connexions spirituelles
-                  </h3>
-                  
-                  <LinksList 
-                    entryId={grace.id}
-                    links={spiritualLinks}
-                    entries={allEntries}
-                    onViewEntry={(entryId) => {
-                      const entry = allEntries.find(e => e.id === entryId)
-                      if (entry) {
-                        router.push(`/${entry.type}s/${entry.id}`)
-                      }
-                    }}
-                    onDeleteLink={async (linkId) => {
-                      const { error } = await supabase
-                        .from('liens_spirituels')
-                        .delete()
-                        .eq('id', linkId)
-                      
-                      if (!error) {
-                        const { data: { user } } = await supabase.auth.getUser()
-                        if (user?.id) {
-                          const updatedLinks = await loadUserSpiritualLinks(user.id)
-                          setSpiritualLinks(updatedLinks)
-                        }
-                      }
-                    }}
-                  />
-                  
-                  <button 
-                    onClick={() => router.push(`/relecture?mode=atelier&source=${grace.id}&sourceType=grace`)}
-                    style={{
-                      marginTop: '1rem',
-                      padding: '0.75rem 1.5rem',
-                      background: '#F59E0B',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '0.5rem',
-                      cursor: 'pointer',
-                      fontSize: '0.875rem',
-                      fontWeight: '500',
-                      transition: 'all 0.2s',
-                      display: 'inline-flex',
+                    <h3 style={{
+                      fontSize: '1.2rem',
+                      fontWeight: '600',
+                      color: '#78350F',
+                      marginBottom: '1rem',
+                      display: 'flex',
                       alignItems: 'center',
                       gap: '0.5rem'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = '#D97706'
-                      e.currentTarget.style.transform = 'translateY(-2px)'
-                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(245, 158, 11, 0.3)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = '#F59E0B'
-                      e.currentTarget.style.transform = 'translateY(0)'
-                      e.currentTarget.style.boxShadow = 'none'
-                    }}
-                  >
-                    <LinkIcon size={16} />
-                    Créer une nouvelle connexion
-                  </button>
+                    }}>
+                      🔗 Connexions spirituelles
+                    </h3>
+
+                    <LinksList
+                      entryId={grace.id}
+                      links={spiritualLinks}
+                      entries={allEntries}
+                      onViewEntry={(entryId) => {
+                        const entry = allEntries.find(e => e.id === entryId)
+                        if (entry) {
+                          router.push(`/${entry.type}s/${entry.id}`)
+                        }
+                      }}
+                      onDeleteLink={async (linkId) => {
+                        const { error } = await supabase
+                          .from('liens_spirituels')
+                          .delete()
+                          .eq('id', linkId)
+
+                        if (!error) {
+                          const { data: { user } } = await supabase.auth.getUser()
+                          if (user?.id) {
+                            const updatedLinks = await loadUserSpiritualLinks(user.id)
+                            setSpiritualLinks(updatedLinks)
+                          }
+                        }
+                      }}
+                    />
+
+                    <button
+                      onClick={() => router.push(`/relecture?mode=atelier&source=${grace.id}&sourceType=grace`)}
+                      style={{
+                        marginTop: '1rem',
+                        padding: '0.75rem 1.5rem',
+                        background: '#F59E0B',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '0.5rem',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem',
+                        fontWeight: '500',
+                        transition: 'all 0.2s',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#D97706'
+                        e.currentTarget.style.transform = 'translateY(-2px)'
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(245, 158, 11, 0.3)'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#F59E0B'
+                        e.currentTarget.style.transform = 'translateY(0)'
+                        e.currentTarget.style.boxShadow = 'none'
+                      }}
+                    >
+                      <LinkIcon size={16} />
+                      Créer une nouvelle connexion
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </>
-        )}
+            </>
+          )}
       </div>
     </div>
   )

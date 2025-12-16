@@ -9,6 +9,7 @@ import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import LinksList from '@/app/components/LinksList'
 import { loadUserSpiritualLinks } from '@/app/lib/spiritual-links-helpers'
+import FiorettiButton from '@/app/components/FiorettiButton'
 
 interface Ecriture {
   id: string
@@ -113,6 +114,40 @@ export default function EcritureDetailPage({ params }: { params: Promise<{ id: s
       setDeleting(false)
     }
   }
+
+  // Hooks doivent être appelés avant tout return conditionnel
+  const [formattedEcritureContent, setFormattedEcritureContent] = useState('');
+
+  useEffect(() => {
+    if (!ecriture || loading) return;
+
+    const lines = [];
+
+    // Référence et texte
+    lines.push(`📖 ${ecriture.reference}`);
+    lines.push('');
+    lines.push(`« ${ecriture.texte_complet} »`);
+    lines.push('');
+
+    // Date et contexte
+    lines.push(`📅 Reçu le ${format(new Date(ecriture.date_reception), 'd MMMM yyyy', { locale: fr })} • ${contexteLabels[ecriture.contexte] || ecriture.contexte}`);
+    lines.push('');
+
+    // Ce qui m'a touché
+    if (ecriture.ce_qui_ma_touche) {
+      lines.push('💡 Ce qui m\'a touché');
+      lines.push(ecriture.ce_qui_ma_touche);
+      lines.push('');
+    }
+
+    // Fruits spirituels
+    if (ecriture.fruits && ecriture.fruits.length > 0) {
+      lines.push('✨ Fruits spirituels');
+      lines.push(ecriture.fruits.join(', '));
+    }
+
+    setFormattedEcritureContent(lines.join('\n'));
+  }, [ecriture, loading]);
 
   if (loading) {
     return (
@@ -456,6 +491,19 @@ export default function EcritureDetailPage({ params }: { params: Promise<{ id: s
               }}>
                 Psaume 119, 105
               </p>
+            </div>
+
+            {/* Actions de partage */}
+            <div style={{
+              marginTop: '2rem',
+              display: 'flex',
+              justifyContent: 'center'
+            }}>
+              <FiorettiButton
+                element={ecriture}
+                elementType="ecriture"
+                formattedContent={formattedEcritureContent}
+              />
             </div>
           </div>
         </div>

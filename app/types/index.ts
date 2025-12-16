@@ -115,3 +115,33 @@ export interface LienSpirituel {
   description?: string;
   dateCreation: Date;
 }
+
+// Fioretti (Jardin des partages)
+export interface Fioretto {
+  id: string;
+  user_id: string;
+  element_type: 'grace' | 'priere' | 'ecriture' | 'parole' | 'rencontre';
+  element_id: string;
+  contenu_affiche: any; // JSONB
+  message_ajout?: string;
+  anonyme: boolean;
+  pseudo?: string;
+  moderateur_id?: string;
+  date_publication?: Date;
+  statut: 'propose' | 'approuve' | 'refuse';
+  created_at: Date;
+  // Relations (pour l'affichage)
+  interactions?: FiorettoInteraction[];
+  _count?: {
+    soutien: number;
+    action_grace: number;
+  };
+}
+
+export interface FiorettoInteraction {
+  id: string;
+  fioretto_id: string;
+  user_id: string;
+  type_interaction: 'soutien' | 'action_grace';
+  created_at: Date;
+}
