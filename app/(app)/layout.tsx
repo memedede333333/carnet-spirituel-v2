@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { supabase } from '@/app/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
+import FiorettiMenuBadge from '@/app/components/FiorettiMenuBadge'
 
 export default function AppLayout({
   children,
@@ -31,7 +32,7 @@ export default function AppLayout({
             .select('prenom, nom, email')
             .eq('id', user.id)
             .single()
-          
+
           if (data) {
             setProfile(data)
           }
@@ -40,7 +41,7 @@ export default function AppLayout({
         console.error('Erreur chargement profil:', error)
       }
     }
-    
+
     loadProfile()
   }, [])
 
@@ -52,7 +53,7 @@ export default function AppLayout({
         setIsMobileMenuOpen(false)
       }
     }
-    
+
     checkMobile()
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
@@ -76,6 +77,8 @@ export default function AppLayout({
     { href: '/paroles', label: 'Paroles', emoji: '🕊️', color: '#0ea5e9' },
     { href: '/rencontres', label: 'Rencontres', emoji: '🤝', color: '#f43f5e' },
     { href: '/relecture', label: 'Relecture', emoji: '🌿', color: '#7BA7E1' },
+    { href: '/fioretti', label: 'Fioretti Communauté', emoji: '🌸', color: '#F59E0B' },
+    { href: '/mes-fioretti', label: 'Mes Fioretti', emoji: '📝', color: '#D97706' },
   ]
 
   return (
@@ -167,10 +170,10 @@ export default function AppLayout({
               background: 'radial-gradient(circle, rgba(224, 242, 254, 0.2), transparent)',
               animation: 'shimmer 3s ease-in-out infinite'
             }} />
-            <Image 
-              src="/logo-esprit-saint-web.png" 
-              alt="Logo Esprit Saint" 
-              width={60} 
+            <Image
+              src="/logo-esprit-saint-web.png"
+              alt="Logo Esprit Saint"
+              width={60}
               height={60}
               style={{
                 objectFit: 'contain',
@@ -189,7 +192,7 @@ export default function AppLayout({
           }}>
             Carnet Spirituel
           </h1>
-          
+
           {/* Profil cliquable */}
           <Link
             href="/profile"
@@ -217,7 +220,7 @@ export default function AppLayout({
               e.currentTarget.style.transform = 'translateY(0)'
             }}
           >
-            <div 
+            <div
               style={{
                 width: '30px',
                 height: '30px',
@@ -240,7 +243,7 @@ export default function AppLayout({
             >
               <User size={16} style={{ color: '#6366f1' }} />
             </div>
-            <span style={{ 
+            <span style={{
               fontWeight: '500',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -251,7 +254,7 @@ export default function AppLayout({
               {profile ? `${profile.prenom} ${profile.nom || ''}`.trim() : 'Chargement...'}
             </span>
           </Link>
-          
+
           {profile?.email && (
             <p style={{
               fontSize: '0.75rem',
@@ -267,11 +270,16 @@ export default function AppLayout({
         <nav style={{ flex: 1 }}>
           {menuItems.map((item, index) => {
             const isActive = pathname.startsWith(item.href)
-            
+
             return (
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={() => {
+                  if (item.href === '/fioretti') {
+                    window.dispatchEvent(new Event('fioretti-menu-clicked'));
+                  }
+                }}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -335,6 +343,9 @@ export default function AppLayout({
                   }}>
                     {item.emoji}
                   </span>
+
+                  {/* Badge notification pour Fioretti */}
+                  {item.href === '/fioretti' && <FiorettiMenuBadge />}
                 </div>
 
                 {/* Texte */}
@@ -388,7 +399,7 @@ export default function AppLayout({
       </aside>
 
       {/* Main content - AUCUNE MODIFICATION ICI */}
-      <main style={{ 
+      <main style={{
         flex: 1,
         paddingTop: isMobile ? '5rem' : 0
       }}>

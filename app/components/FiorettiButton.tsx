@@ -45,7 +45,7 @@ export default function FiorettiButton({ element, elementType, formattedContent 
         );
     }
 
-    // État: Publié dans le Jardin
+    // État: Publié dans la communauté
     if (statut === 'approuve') {
         return (
             <div style={{
@@ -61,7 +61,7 @@ export default function FiorettiButton({ element, elementType, formattedContent 
                 border: '2px solid #6EE7B7'
             }}>
                 <CheckCircle2 size={16} />
-                Publié dans le Jardin
+                Publié dans la communauté
             </div>
         );
     }

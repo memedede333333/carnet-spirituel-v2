@@ -127,6 +127,7 @@ export interface Fioretto {
   anonyme: boolean;
   pseudo?: string;
   moderateur_id?: string;
+  message_moderateur?: string;
   date_publication?: Date;
   statut: 'propose' | 'approuve' | 'refuse';
   created_at: Date;

@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import NewFiorettiAlert from '@/app/components/NewFiorettiAlert'
 
 export default function DashboardPage() {
   const modules = [
@@ -68,6 +69,9 @@ export default function DashboardPage() {
           Contemplez l'action de Dieu dans votre vie
         </p>
       </div>
+
+      {/* Alerte nouveaux fioretti */}
+      <NewFiorettiAlert />
 
       <div className="modules-grid">
         {modules.map((module, index) => (
