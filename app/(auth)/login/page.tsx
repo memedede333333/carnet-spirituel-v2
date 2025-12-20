@@ -1,4 +1,5 @@
 import AuthForm from '@/app/components/AuthForm'
+import Link from 'next/link'
 
 export default function LoginPage() {
   return (
@@ -10,7 +11,7 @@ export default function LoginPage() {
       justifyContent: 'center',
       padding: '1rem'
     }}>
-      <AuthForm mode="login" />
+      <AuthForm mode="login" showResetLink={true} />
     </div>
   )
 }

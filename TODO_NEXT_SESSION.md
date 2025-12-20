@@ -1,50 +1,43 @@
-# Tâches pour la prochaine session - Modération & Profils
+# Tâches pour la prochaine session
 
-## 🎯 Objectif Principal : Configuration Modération
-Mettre en place les profils **Admin** et **Modérateur** avec leurs permissions respectives.
-
----
-
-## 🔐 Configuration des Rôles
-
-### 1. Schéma Base de Données
-- [ ] Vérifier colonne `role` dans table `profiles`
-- [ ] Créer types/énumérations si nécessaire (`superadmin`, `moderateur`, `user`)
-- [ ] Script SQL pour attribuer les rôles
-
-### 2. Permissions & RLS
-- [ ] Politique RLS pour `/admin/moderation` (accessible aux `superadmin` et `moderateur`)
-- [ ] Vérification des permissions sur table `fioretti`
-- [ ] Permissions sur table `notifications`
-
-### 3. Interface Admin
-- [ ] Page de gestion des utilisateurs (liste, attribution rôles)
-- [ ] Vérification accès `/admin/moderation` selon profil
-- [ ] Tests workflow modération complet
+## 🎯 Priorité Actuelle : Modération & Finalisation Auth
+L'audit et l'implémentation de l'authentification sont terminés (sauf config Microsoft). Le prochain gros chantier est la finalisation de l'interface d'administration/modération et la gestion des rôles.
 
 ---
 
-## ✅ Déjà Accompli (Session Précédente)
-
-- [x] **Menu latéral** : Bug de disparition corrigé
-- [x] **Badge Nouveaux Fioretti** : Fonctionnel et testé
-- [x] **Interactions Fioretti** : Toggle Prier/Grâce fonctionnel
-- [x] **Harmonisation** : Tous modules utilisent `FiorettiButton`
-- [x] **Effet de survol** : Bordure colorée sans "Lire plus"
-
----
-
-## 🚧 En Suspens (Reporter)
-
-### UX / UI
-- [ ] Indicateur visuel pour inciter au clic sur cartes (icône 👁️, animation)
-- [ ] Structure Menu : Regrouper "Fioretti Communauté" et "Mes Fioretti" ?
-
-### Pages Manquantes
-- [ ] **Page "Mes Fioretti"** : Vue utilisateur de ses soumissions + statuts + messages modérateur
-- [ ] **Refonte Jardin** : Modal détail "waouh" selon cahier des charges
-- [ ] **Centre Notifications** : Badge + liste des notifications
+## 🔐 Authentification (Terminé ✅)
+- [x] **Récupération de mot de passe** :
+    - Pages `/reset-password` et `/update-password` créées.
+    - Lien "Mot de passe oublié ?" ajouté au login.
+    - Emails configurés avec templates "Spirituels".
+- [x] **OAuth (Google)** :
+    - Bouton intégré et fonctionnel.
+    - Page de callback `/auth/callback` gérant la création de profil.
+- [x] **OAuth (Microsoft)** :
+    - Code intégré (bouton + logique).
+    - Guide de configuration créé : `CHECKLIST_OAUTH_CONFIG.md`.
+    - *Reste à faire : Configurer Azure Portal quand souhaité.*
 
 ---
 
-*Mis à jour le : 20 Décembre 2024*
+## 🛡️ Modération & Rôles (En cours 🚧)
+
+### 1. Gestion des Utilisateurs
+- [ ] Page d'administration des utilisateurs (liste, recherche).
+- [ ] Interface d'attribution des rôles (`superadmin`, `moderateur`, `user`).
+- [ ] Vérification des permissions RLS pour l'accès admin.
+
+### 2. Interface de Modération (`/admin/moderation`)
+- [ ] Finaliser l'interface de validation des fiorretti.
+- [ ] Tester le workflow complet : Soumission -> Notification -> Validation/Refus -> Publication.
+
+---
+
+## 🎨 UI / UX (À venir)
+- [ ] **Page "Mes Fioretti"** : Vue utilisateur de ses soumissions + statuts.
+- [ ] **Refonte Jardin** : Modal détail "waouh" selon cahier des charges.
+- [ ] **Centre Notifications** : Badge + liste des notifications.
+
+---
+
+*Mis à jour le : 20 Décembre 2024 - Session "Authentification & Audit"*
