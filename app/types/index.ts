@@ -9,7 +9,7 @@ export interface Utilisateur {
   email: string;
   prenom: string;
   nom?: string;
-  role: 'user' | 'superadmin';
+  role: 'user' | 'moderateur' | 'superadmin';
   createdAt: Date;
 }
 
@@ -130,6 +130,7 @@ export interface Fioretto {
   message_moderateur?: string;
   date_publication?: Date;
   statut: 'propose' | 'approuve' | 'refuse';
+  archived_at?: Date | null;
   created_at: Date;
   // Relations (pour l'affichage)
   interactions?: FiorettoInteraction[];

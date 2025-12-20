@@ -173,8 +173,8 @@ export default function MesFiorettiPage() {
                             marginBottom: '0.5rem'
                         }}>
                             {filter === 'all'
-                                ? 'Aucun fioretto partagé'
-                                : `Aucun fioretto ${STATUT_CONFIG[filter as keyof typeof STATUT_CONFIG].label.toLowerCase()}`
+                                ? 'Aucun fioretti partagé'
+                                : `Aucun fioretti ${STATUT_CONFIG[filter as keyof typeof STATUT_CONFIG].label.toLowerCase()}`
                             }
                         </h3>
                         <p style={{ color: '#92400E', fontStyle: 'italic' }}>

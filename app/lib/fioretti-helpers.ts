@@ -151,3 +151,74 @@ export function formatFiorettoContent(type: string, content: any): {
 
     return { mainText, metadata };
 }
+
+/**
+ * Archive un fioretto (modérateurs uniquement)
+ * @param fiorettoId ID du fioretto à archiver
+ * @returns true si succès, false sinon
+ */
+export async function archiveFioretto(fiorettoId: string): Promise<boolean> {
+    try {
+        const { supabase } = await import('./supabase');
+        const { canModerate } = await import('./auth-helpers');
+
+        // Vérifier permissions
+        const hasPermission = await canModerate();
+        if (!hasPermission) {
+            console.error('Unauthorized: Moderator access required');
+            return false;
+        }
+
+        // Archiver le fioretto
+        const { error } = await supabase
+            .from('fioretti')
+            .update({ archived_at: new Date().toISOString() })
+            .eq('id', fiorettoId)
+            .eq('statut', 'approuve'); // Seulement les fioretti approuvés
+
+        if (error) {
+            console.error('Error archiving fioretto:', error);
+            return false;
+        }
+
+        return true;
+    } catch (error) {
+        console.error('Error in archiveFioretto:', error);
+        return false;
+    }
+}
+
+/**
+ * Désarchive un fioretto (modérateurs uniquement)
+ * @param fiorettoId ID du fioretto à désarchiver
+ * @returns true si succès, false sinon
+ */
+export async function unarchiveFioretto(fiorettoId: string): Promise<boolean> {
+    try {
+        const { supabase } = await import('./supabase');
+        const { canModerate } = await import('./auth-helpers');
+
+        // Vérifier permissions
+        const hasPermission = await canModerate();
+        if (!hasPermission) {
+            console.error('Unauthorized: Moderator access required');
+            return false;
+        }
+
+        // Désarchiver le fioretto
+        const { error } = await supabase
+            .from('fioretti')
+            .update({ archived_at: null })
+            .eq('id', fiorettoId);
+
+        if (error) {
+            console.error('Error unarchiving fioretto:', error);
+            return false;
+        }
+
+        return true;
+    } catch (error) {
+        console.error('Error in unarchiveFioretto:', error);
+        return false;
+    }
+}

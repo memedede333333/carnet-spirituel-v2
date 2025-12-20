@@ -19,7 +19,8 @@ export default function AppLayout({
   // Supabase importé depuis lib/supabase.ts
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
-  const [profile, setProfile] = useState<{ prenom: string; nom: string; email: string } | null>(null)
+  const [profile, setProfile] = useState<{ prenom: string; nom: string; email: string; role: string } | null>(null)
+  const [userRole, setUserRole] = useState<string | null>(null)
 
   // Charger le profil utilisateur
   useEffect(() => {
@@ -29,12 +30,13 @@ export default function AppLayout({
         if (user) {
           const { data } = await supabase
             .from('profiles')
-            .select('prenom, nom, email')
+            .select('prenom, nom, email, role')
             .eq('id', user.id)
             .single()
 
           if (data) {
             setProfile(data)
+            setUserRole(data.role)
           }
         }
       } catch (error) {
@@ -69,7 +71,8 @@ export default function AppLayout({
     router.push('/login')
   }
 
-  const menuItems = [
+  // Items de menu de base
+  const baseMenuItems = [
     { href: '/dashboard', label: 'Tableau de bord', emoji: '🏠', color: '#8b5cf6' },
     { href: '/graces', label: 'Grâces reçues', emoji: '✨', color: '#fbbf24' },
     { href: '/prieres', label: 'Prières', emoji: '🙏', color: '#6366f1' },
@@ -77,8 +80,26 @@ export default function AppLayout({
     { href: '/paroles', label: 'Paroles', emoji: '🕊️', color: '#0ea5e9' },
     { href: '/rencontres', label: 'Rencontres', emoji: '🤝', color: '#f43f5e' },
     { href: '/relecture', label: 'Relecture', emoji: '🌿', color: '#7BA7E1' },
+  ]
+
+  // Construire le menu complet avec sections conditionnelles
+  const menuItems = [
+    ...baseMenuItems,
+    // Section Partage Communauté
+    { type: 'separator' as const, label: 'PARTAGE COMMUNAUTÉ' },
     { href: '/fioretti', label: 'Fioretti Communauté', emoji: '🌸', color: '#F59E0B' },
     { href: '/mes-fioretti', label: 'Mes Fioretti', emoji: '📝', color: '#D97706' },
+    // Section Admin (superadmin uniquement)
+    ...(userRole === 'superadmin' ? [
+      { type: 'separator' as const, label: 'Administration' },
+      { href: '/admin/users', label: 'Gestion Utilisateurs', emoji: '👥', color: '#EF4444' },
+      { href: '/admin/moderation', label: 'Modération', emoji: '🛡️', color: '#F59E0B', hasBadge: true },
+    ] : []),
+    // Section Modération (modérateur uniquement)
+    ...(userRole === 'moderateur' ? [
+      { type: 'separator' as const, label: 'Modération' },
+      { href: '/admin/moderation', label: 'Modération Fioretti', emoji: '🛡️', color: '#F59E0B', hasBadge: true },
+    ] : []),
   ]
 
   return (
@@ -255,6 +276,22 @@ export default function AppLayout({
             </span>
           </Link>
 
+          {/* Badge rôle - visible pour les modérateurs et admins */}
+          {profile?.role && (profile.role === 'moderateur' || profile.role === 'superadmin') && (
+            <span style={{
+              fontSize: '0.7rem',
+              padding: '0.25rem 0.6rem',
+              marginTop: '0.5rem',
+              background: profile.role === 'superadmin' ? '#EF4444' : '#F59E0B',
+              color: 'white',
+              borderRadius: '9999px',
+              fontWeight: '600',
+              display: 'inline-block'
+            }}>
+              {profile.role === 'superadmin' ? '👑 Admin' : '🛡️ Mod'}
+            </span>
+          )}
+
           {profile?.email && (
             <p style={{
               fontSize: '0.75rem',
@@ -269,6 +306,30 @@ export default function AppLayout({
         {/* Navigation */}
         <nav style={{ flex: 1 }}>
           {menuItems.map((item, index) => {
+            // Handle separator items
+            if ('type' in item && item.type === 'separator') {
+              return (
+                <div
+                  key={`separator-${index}`}
+                  style={{
+                    padding: '1rem 0 0.5rem 1rem',
+                    marginTop: '0.75rem',
+                    borderTop: '1px solid rgba(0, 0, 0,0.06)',
+                    fontSize: '0.75rem',
+                    fontWeight: '600',
+                    color: '#94A3B8',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em'
+                  }}
+                >
+                  {item.label}
+                </div>
+              );
+            }
+
+            // Regular menu items
+            if (!('href' in item)) return null;
+
             const isActive = pathname.startsWith(item.href)
 
             return (
@@ -276,7 +337,7 @@ export default function AppLayout({
                 key={item.href}
                 href={item.href}
                 onClick={() => {
-                  if (item.href === '/fioretti') {
+                  if (item.href === '/fioretti' || ('hasBadge' in item && item.hasBadge)) {
                     window.dispatchEvent(new Event('fioretti-menu-clicked'));
                   }
                 }}
@@ -291,22 +352,23 @@ export default function AppLayout({
                   fontWeight: isActive ? '500' : '400',
                   transition: 'all 0.3s ease',
                   position: 'relative',
-                  overflow: 'hidden',
                   marginBottom: '0.5rem',
                   background: isActive ? 'rgba(255, 255, 255, 0.8)' : 'transparent',
                   animation: `fadeInLeft 0.6s ease-out both`,
-                  animationDelay: `${index * 0.05}s`
+                  animationDelay: `${index * 0.05}s`,
+                  zIndex: 1,
+                  transform: 'translateZ(0)' // Force GPU layer to prevent clipping
                 }}
                 onMouseEnter={(e) => {
                   if (!isActive) {
                     e.currentTarget.style.background = 'rgba(0, 0, 0, 0.04)'
-                    e.currentTarget.style.transform = 'translateX(4px)'
+                    // e.currentTarget.style.transform = 'translateX(4px)' // Désactivé pour stabilité
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (!isActive) {
                     e.currentTarget.style.background = 'transparent'
-                    e.currentTarget.style.transform = 'translateX(0)'
+                    // e.currentTarget.style.transform = 'translateX(0)' // Désactivé pour stabilité
                   }
                 }}
               >
@@ -335,7 +397,7 @@ export default function AppLayout({
                   boxShadow: isActive ? '0 4px 12px rgba(0, 0, 0, 0.1)' : '0 2px 8px rgba(0, 0, 0, 0.08)',
                   transition: 'all 0.3s ease',
                   position: 'relative',
-                  overflow: 'hidden'
+                  overflow: 'visible'
                 }}>
                   <span style={{
                     fontSize: '1.5rem',
@@ -344,8 +406,8 @@ export default function AppLayout({
                     {item.emoji}
                   </span>
 
-                  {/* Badge notification pour Fioretti */}
-                  {item.href === '/fioretti' && <FiorettiMenuBadge />}
+                  {/* Badge notification pour Fioretti et Modération */}
+                  {(item.href === '/fioretti' || ('hasBadge' in item && item.hasBadge)) && <FiorettiMenuBadge />}
                 </div>
 
                 {/* Texte */}
@@ -396,18 +458,19 @@ export default function AppLayout({
             <span>Déconnexion</span>
           </button>
         </div>
-      </aside>
+      </aside >
 
       {/* Main content - AUCUNE MODIFICATION ICI */}
-      <main style={{
+      < main style={{
         flex: 1,
         paddingTop: isMobile ? '5rem' : 0
-      }}>
+      }
+      }>
         {children}
-      </main>
+      </main >
 
       {/* Styles globaux pour les animations */}
-      <style jsx global>{`
+      < style jsx global > {`
         @keyframes shimmer {
           0%, 100% { transform: translate(0, 0); }
           50% { transform: translate(10%, 10%); }
@@ -423,7 +486,7 @@ export default function AppLayout({
             transform: translateX(0);
           }
         }
-      `}</style>
-    </div>
+      `}</style >
+    </div >
   )
 }

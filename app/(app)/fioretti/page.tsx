@@ -160,7 +160,7 @@ export default function FiorettiPage() {
                     <div style={{
                         display: 'grid',
                         gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
-                        gap: '1.5rem',
+                        gap: '2rem',
                         marginBottom: '2rem'
                     }}>
                         {filteredFioretti.map((fioretto, index) => {
@@ -185,39 +185,25 @@ export default function FiorettiPage() {
                                         e.currentTarget.style.transform = 'translateY(-12px)';
                                         e.currentTarget.style.filter = 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.15))';
                                         e.currentTarget.style.background = `linear-gradient(135deg, ${config.bg}, transparent)`;
-                                        const indicator = e.currentTarget.querySelector('.click-indicator') as HTMLElement;
-                                        if (indicator) indicator.style.opacity = '1';
+                                        // Ajouter une bordure colorée subtile
+                                        const card = e.currentTarget.querySelector('.fioretto-card') as HTMLElement;
+                                        if (card) {
+                                            card.style.borderColor = config.border;
+                                            card.style.borderWidth = '2px';
+                                        }
                                     }}
                                     onMouseLeave={(e) => {
                                         e.currentTarget.style.transform = '';
                                         e.currentTarget.style.filter = '';
                                         e.currentTarget.style.background = 'transparent';
-                                        const indicator = e.currentTarget.querySelector('.click-indicator') as HTMLElement;
-                                        if (indicator) indicator.style.opacity = '0';
+                                        const card = e.currentTarget.querySelector('.fioretto-card') as HTMLElement;
+                                        if (card) {
+                                            card.style.borderColor = '#F3F4F6';
+                                            card.style.borderWidth = '1px';
+                                        }
                                     }}
                                 >
                                     <FiorettoCard fioretto={fioretto} />
-
-                                    {/* Indicateur "Lire plus" */}
-                                    <div
-                                        className="click-indicator"
-                                        style={{
-                                            position: 'absolute',
-                                            bottom: '1rem',
-                                            right: '1.5rem',
-                                            fontSize: '0.75rem',
-                                            color: config.text,
-                                            opacity: 0,
-                                            transition: 'opacity 0.2s',
-                                            pointerEvents: 'none',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '0.25rem',
-                                            fontWeight: '500'
-                                        }}
-                                    >
-                                        Lire plus <span>→</span>
-                                    </div>
                                 </div>
                             );
                         })}
