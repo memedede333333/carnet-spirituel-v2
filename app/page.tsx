@@ -3,11 +3,21 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
+import IntroAnimation from '@/components/IntroAnimation'
 
 export default function Home() {
+  const [showIntro, setShowIntro] = useState(false)
+  const [introChecked, setIntroChecked] = useState(false)
   const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0)
   const [isMobile, setIsMobile] = useState(false)
-  
+
+  // Vérifier si l'animation a déjà été vue
+  useEffect(() => {
+    const hasSeenIntro = sessionStorage.getItem('hasSeenIntro')
+    setShowIntro(!hasSeenIntro)
+    setIntroChecked(true)
+  }, [])
+
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768)
@@ -16,7 +26,7 @@ export default function Home() {
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
-  
+
   const biblicalQuotes = [
     { text: "Allez dans le monde entier. Proclamez l'Évangile à toute la création.", reference: "Marc 16, 15" },
     { text: "Vous serez mes témoins à Jérusalem, dans toute la Judée et la Samarie, et jusqu'aux extrémités de la terre.", reference: "Actes 1, 8" },
@@ -30,10 +40,26 @@ export default function Home() {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentQuoteIndex((prev) => (prev + 1) % biblicalQuotes.length)
-    }, 6000) // Change toutes les 6 secondes
-    
+    }, 6000)
+
     return () => clearInterval(interval)
-  }, [])
+  }, [biblicalQuotes.length])
+
+  // Marquer l'intro comme vue
+  const handleIntroComplete = () => {
+    sessionStorage.setItem('hasSeenIntro', 'true')
+    setShowIntro(false)
+  }
+
+  // Si on affiche l'intro, montrer uniquement l'animation
+  if (!introChecked) {
+    return null
+  }
+
+  if (showIntro) {
+    return <IntroAnimation onComplete={handleIntroComplete} />
+  }
+
 
   const modules = [
     {
@@ -111,15 +137,15 @@ export default function Home() {
             justifyContent: 'flex-end',
             marginBottom: '1rem'
           }}>
-            <Link 
-              href="/login" 
+            <Link
+              href="/login"
               className="btn btn-secondary"
               style={{ fontSize: '0.875rem' }}
             >
               Se connecter
             </Link>
-            <Link 
-              href="/register" 
+            <Link
+              href="/register"
               className="btn btn-primary"
               style={{ fontSize: '0.875rem' }}
             >
@@ -146,10 +172,10 @@ export default function Home() {
               background: 'radial-gradient(circle, rgba(224, 242, 254, 0.2), transparent)',
               animation: 'pulse 4s ease-in-out infinite'
             }} />
-            <Image 
-              src="/logo-esprit-saint-web.png" 
-              alt="Logo Esprit Saint" 
-              width={140} 
+            <Image
+              src="/logo-esprit-saint-web.png"
+              alt="Logo Esprit Saint"
+              width={140}
               height={140}
               style={{
                 objectFit: 'contain',
@@ -178,15 +204,15 @@ export default function Home() {
             gap: '0.5rem',
             zIndex: 10
           }}>
-            <Link 
-              href="/login" 
+            <Link
+              href="/login"
               className="btn btn-secondary"
               style={{ fontSize: '0.875rem' }}
             >
               Se connecter
             </Link>
-            <Link 
-              href="/register" 
+            <Link
+              href="/register"
               className="btn btn-primary"
               style={{ fontSize: '0.875rem' }}
             >
@@ -220,10 +246,10 @@ export default function Home() {
                 background: 'radial-gradient(circle, rgba(224, 242, 254, 0.2), transparent)',
                 animation: 'pulse 4s ease-in-out infinite'
               }} />
-              <Image 
-                src="/logo-esprit-saint-web.png" 
-                alt="Logo Esprit Saint" 
-                width={140} 
+              <Image
+                src="/logo-esprit-saint-web.png"
+                alt="Logo Esprit Saint"
+                width={140}
                 height={140}
                 style={{
                   objectFit: 'contain',
@@ -237,8 +263,8 @@ export default function Home() {
       )}
 
       {/* Titre et sous-titre */}
-      <div className="dashboard-header fade-in" style={{ 
-        marginTop: isMobile ? '2rem' : '12rem' 
+      <div className="dashboard-header fade-in" style={{
+        marginTop: isMobile ? '2rem' : '12rem'
       }}>
         <h1 className="dashboard-title">Carnet de grâces & de missions</h1>
         <p className="dashboard-subtitle">
@@ -291,8 +317,8 @@ export default function Home() {
           lineHeight: '1.8',
           fontSize: '1.1rem'
         }}>
-          Ce carnet vous accompagne dans votre chemin de foi en gardant trace des moments où Dieu agit. 
-          Notez vos grâces, priez pour vos frères, méditez la Parole, et relisez votre histoire sainte 
+          Ce carnet vous accompagne dans votre chemin de foi en gardant trace des moments où Dieu agit.
+          Notez vos grâces, priez pour vos frères, méditez la Parole, et relisez votre histoire sainte
           pour y découvrir le fil d'or de la Providence.
         </p>
       </div>
@@ -345,7 +371,7 @@ export default function Home() {
             </div>
           ))}
         </div>
-        
+
         {/* Indicateurs de progression */}
         <div style={{
           display: 'flex',
@@ -377,7 +403,7 @@ export default function Home() {
         }}>
           « Que notre cœur se tourne vers le Seigneur » - Saint Augustin
         </p>
-        
+
         {/* Logo en bas de page */}
         <div style={{
           width: '60px',
@@ -391,10 +417,10 @@ export default function Home() {
           justifyContent: 'center',
           margin: '0 auto'
         }}>
-          <Image 
-            src="/logo-esprit-saint-web.png" 
-            alt="Logo Esprit Saint" 
-            width={60} 
+          <Image
+            src="/logo-esprit-saint-web.png"
+            alt="Logo Esprit Saint"
+            width={60}
             height={60}
             style={{
               objectFit: 'contain'
