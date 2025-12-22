@@ -66,6 +66,25 @@ export default function ModerationPage() {
         }
     };
 
+    // Helper pour envoyer un email via l'API
+    const sendEmailNotification = async (
+        userEmail: string,
+        userName: string,
+        status: 'approuve' | 'refuse' | 'modifie',
+        moderatorMessage?: string
+    ) => {
+        try {
+            await fetch('/api/send-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userEmail, userName, status, moderatorMessage })
+            });
+        } catch (error) {
+            console.error('Erreur envoi email:', error);
+        }
+    };
+
+
     const handleModeration = async (id: string, decision: 'approuve' | 'refuse') => {
         const action = decision === 'approuve' ? 'approuver' : 'refuser';
         if (!confirm(`Êtes-vous sûr de vouloir ${action} ce fioretto ?`)) return;
@@ -103,6 +122,35 @@ export default function ModerationPage() {
                         .update({ statut_partage: decision })
                         .eq('id', fioretto.element_id);
                 }
+
+                // Créer notification pour l'auteur
+                const notifMessage = decision === 'approuve'
+                    ? 'Votre fioretto a été approuvé et est maintenant visible dans le Jardin des Fioretti.'
+                    : 'Votre fioretto n\'a pas été approuvé pour publication.';
+
+                await supabase
+                    .from('notifications')
+                    .insert({
+                        user_id: fioretto.user_id,
+                        type: decision === 'approuve' ? 'fioretto_approuve' : 'fioretto_refuse',
+                        fioretto_id: id,
+                        message: notifMessage
+                    });
+
+                // Envoyer email à l'auteur
+                const { data: author } = await supabase
+                    .from('profiles')
+                    .select('email, prenom')
+                    .eq('id', fioretto.user_id)
+                    .single();
+
+                if (author?.email) {
+                    await sendEmailNotification(
+                        author.email,
+                        author.prenom || 'Cher contributeur',
+                        decision
+                    );
+                }
             }
 
         } catch (err) {
@@ -114,6 +162,9 @@ export default function ModerationPage() {
 
     const handleEdit = async (id: string, editedText: string, moderatorMessage?: string) => {
         try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
             const fioretto = fioretti.find(f => f.id === id);
             if (!fioretto) return;
 
@@ -126,13 +177,68 @@ export default function ModerationPage() {
                 texte: editedText
             };
 
-            await supabase
+            // 1. Update fioretto with new content, backup original, and approve
+            const { error: fiorettoError } = await supabase
                 .from('fioretti')
                 .update({
+                    contenu_original: fioretto.contenu_affiche, // Backup original
                     contenu_affiche: updatedContent,
-                    message_moderateur: moderatorMessage || null
+                    message_moderateur: moderatorMessage || null,
+                    statut: 'approuve',
+                    moderateur_id: user.id,
+                    date_publication: new Date().toISOString(),
+                    date_moderation: new Date().toISOString()
                 })
                 .eq('id', id);
+
+            if (fiorettoError) throw fiorettoError;
+
+            // 2. Update source table status
+            const tableMap: Record<string, string> = {
+                grace: 'graces',
+                priere: 'prieres',
+                ecriture: 'paroles_ecriture',
+                parole: 'paroles_connaissance',
+                rencontre: 'rencontres_missionnaires'
+            };
+
+            const tableName = tableMap[fioretto.element_type];
+            if (tableName) {
+                await supabase
+                    .from(tableName)
+                    .update({ statut_partage: 'approuve' })
+                    .eq('id', fioretto.element_id);
+            }
+
+            // 3. Create notification for author
+            const notifMessage = moderatorMessage
+                ? `Votre fioretto a été modifié et approuvé. Message du modérateur : ${moderatorMessage}`
+                : 'Votre fioretto a été modifié et approuvé pour publication dans le jardin.';
+
+            await supabase
+                .from('notifications')
+                .insert({
+                    user_id: fioretto.user_id,
+                    type: moderatorMessage ? 'message_moderateur' : 'fioretto_modifie',
+                    fioretto_id: id,
+                    message: notifMessage
+                });
+
+            // 4. Envoyer email à l'auteur
+            const { data: author } = await supabase
+                .from('profiles')
+                .select('email, prenom')
+                .eq('id', fioretto.user_id)
+                .single();
+
+            if (author?.email) {
+                await sendEmailNotification(
+                    author.email,
+                    author.prenom || 'Cher contributeur',
+                    'modifie',
+                    moderatorMessage
+                );
+            }
 
             setEditingFioretto(null);
             checkPermissionsAndFetch();
@@ -270,7 +376,7 @@ export default function ModerationPage() {
                     <EditFiorettoModal
                         fioretto={editingFioretto}
                         onClose={() => setEditingFioretto(null)}
-                        onSave={handleEdit}
+                        onSave={(editedText, moderatorMessage) => handleEdit(editingFioretto.id, editedText, moderatorMessage)}
                     />
                 )}
             </div>
