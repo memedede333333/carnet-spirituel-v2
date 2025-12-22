@@ -101,7 +101,7 @@ Ouvrez la console du terminal où tourne `npm run dev` :
 
 ```env
 GMAIL_USER=carnet.spirituel33@gmail.com
-GMAIL_APP_PASSWORD=qimmrdulvtxphosy
+GMAIL_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx # Votre mot de passe d'application
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
