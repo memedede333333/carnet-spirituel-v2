@@ -1,25 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sendFiorettoNotification } from '@/app/lib/email';
+import { sendModeratorNotification } from '@/app/lib/email';
 
 export async function POST(request: NextRequest) {
     try {
-        const { userEmail, userName, status, moderatorMessage, fiorettoContent } = await request.json();
+        const { moderatorEmail, moderatorName, fiorettoData } = await request.json();
 
-        if (!userEmail || !userName || !status) {
+        if (!moderatorEmail || !moderatorName || !fiorettoData) {
             return NextResponse.json(
                 { error: 'Missing required fields' },
                 { status: 400 }
             );
         }
 
-        const result = await sendFiorettoNotification(
-            userEmail,
-            userName,
-            status,
-            moderatorMessage,
-            fiorettoContent
+        const result = await sendModeratorNotification(
+            moderatorEmail,
+            moderatorName,
+            fiorettoData
         );
-
 
         if (result.success) {
             return NextResponse.json({ success: true, messageId: result.messageId });

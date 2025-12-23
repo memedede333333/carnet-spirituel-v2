@@ -66,6 +66,13 @@ export default function MesFiorettiPage() {
             if (error) throw error;
             setFioretti(data as Fioretto[]);
 
+            // Marquer toutes les notifications comme lues
+            await supabase
+                .from('notifications')
+                .update({ lu: true })
+                .eq('user_id', user.id)
+                .eq('lu', false);
+
         } catch (err) {
             console.error('Erreur chargement:', err);
         } finally {

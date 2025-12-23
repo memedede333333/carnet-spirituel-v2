@@ -134,6 +134,52 @@ export default function FiorettoModerationCard({
                     </div>
                 )}
 
+                {/* Infos auteur (pour modération) */}
+                {fioretto.author && (
+                    <div style={{
+                        paddingTop: '1rem',
+                        borderTop: '1px solid #E2E8F0',
+                        marginBottom: '1rem',
+                        background: '#F8FAFC',
+                        padding: '0.75rem',
+                        borderRadius: '0.5rem'
+                    }}>
+                        <div style={{
+                            fontSize: '0.75rem',
+                            color: '#64748B',
+                            marginBottom: '0.5rem',
+                            fontWeight: '600',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em'
+                        }}>
+                            Informations auteur
+                        </div>
+                        <div style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '0.25rem',
+                            fontSize: '0.875rem'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <span style={{ color: '#64748B' }}>👤</span>
+                                <span style={{ color: '#1E293B', fontWeight: '500' }}>
+                                    {fioretto.author.prenom} {fioretto.author.nom || ''}
+                                </span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <span style={{ color: '#64748B' }}>📧</span>
+                                <span style={{ color: '#475569' }}>{fioretto.author.email}</span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <span style={{ color: '#64748B' }}>🎭</span>
+                                <span style={{ color: '#475569' }}>
+                                    Anonymat public : {fioretto.anonyme ? 'Oui' : 'Non'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 <div style={{
                     display: 'flex',
                     alignItems: 'center',

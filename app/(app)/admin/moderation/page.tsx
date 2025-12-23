@@ -43,10 +43,13 @@ export default function ModerationPage() {
                 return;
             }
 
-            // Construire la query
+            // Construire la query avec les infos auteur
             let query = supabase
                 .from('fioretti')
-                .select('*')
+                .select(`
+                    *,
+                    author:profiles!user_id(id, prenom, nom, email)
+                `)
                 .eq('statut', statutFilter);
 
             // Filtrer archivés pour les validés
@@ -71,13 +74,14 @@ export default function ModerationPage() {
         userEmail: string,
         userName: string,
         status: 'approuve' | 'refuse' | 'modifie',
-        moderatorMessage?: string
+        moderatorMessage?: string,
+        fiorettoContent?: { type: string; text: string }
     ) => {
         try {
             await fetch('/api/send-email', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userEmail, userName, status, moderatorMessage })
+                body: JSON.stringify({ userEmail, userName, status, moderatorMessage, fiorettoContent })
             });
         } catch (error) {
             console.error('Erreur envoi email:', error);
@@ -145,10 +149,18 @@ export default function ModerationPage() {
                     .single();
 
                 if (author?.email) {
+                    // Extraire le texte du fioretto
+                    const content = typeof fioretto.contenu_affiche === 'string'
+                        ? JSON.parse(fioretto.contenu_affiche)
+                        : fioretto.contenu_affiche;
+                    const fiorettoText = content?.texte || '';
+
                     await sendEmailNotification(
                         author.email,
                         author.prenom || 'Cher contributeur',
-                        decision
+                        decision,
+                        undefined,
+                        { type: fioretto.element_type, text: fiorettoText }
                     );
                 }
             }
@@ -232,11 +244,18 @@ export default function ModerationPage() {
                 .single();
 
             if (author?.email) {
+                // Extraire le texte du fioretto
+                const content = typeof fioretto.contenu_affiche === 'string'
+                    ? JSON.parse(fioretto.contenu_affiche)
+                    : fioretto.contenu_affiche;
+                const fiorettoText = editedText; // Utiliser le texte édité
+
                 await sendEmailNotification(
                     author.email,
                     author.prenom || 'Cher contributeur',
                     'modifie',
-                    moderatorMessage
+                    moderatorMessage,
+                    { type: fioretto.element_type, text: fiorettoText }
                 );
             }
 

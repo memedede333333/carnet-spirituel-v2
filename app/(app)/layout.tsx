@@ -8,6 +8,8 @@ import { supabase } from '@/app/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import FiorettiMenuBadge from '@/app/components/FiorettiMenuBadge'
+import ModerationBadge from '@/app/components/ModerationBadge'
+import UserNotificationBadge from '@/app/components/UserNotificationBadge'
 
 export default function AppLayout({
   children,
@@ -337,8 +339,12 @@ export default function AppLayout({
                 key={item.href}
                 href={item.href}
                 onClick={() => {
-                  if (item.href === '/fioretti' || ('hasBadge' in item && item.hasBadge)) {
+                  if (item.href === '/fioretti') {
                     window.dispatchEvent(new Event('fioretti-menu-clicked'));
+                  } else if (item.href === '/admin/moderation') {
+                    window.dispatchEvent(new Event('moderation-menu-clicked'));
+                  } else if (item.href === '/mes-fioretti') {
+                    window.dispatchEvent(new Event('mes-fioretti-menu-clicked'));
                   }
                 }}
                 style={{
@@ -406,8 +412,10 @@ export default function AppLayout({
                     {item.emoji}
                   </span>
 
-                  {/* Badge notification pour Fioretti et Modération */}
-                  {(item.href === '/fioretti' || ('hasBadge' in item && item.hasBadge)) && <FiorettiMenuBadge />}
+                  {/* Badge notification - Fioretti, Modération ou Mes Fioretti */}
+                  {item.href === '/fioretti' && <FiorettiMenuBadge />}
+                  {item.href === '/admin/moderation' && <ModerationBadge />}
+                  {item.href === '/mes-fioretti' && <UserNotificationBadge />}
                 </div>
 
                 {/* Texte */}

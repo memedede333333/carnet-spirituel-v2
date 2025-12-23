@@ -4,7 +4,7 @@ import { use, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/app/lib/supabase'
-import { Calendar, MapPin, Tag, Eye, Share2, Edit, Trash2, ArrowLeft, Sparkles, LinkIcon } from 'lucide-react'
+import { Calendar, MapPin, Tag, Edit, Trash2, ArrowLeft, Sparkles, LinkIcon } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import LinksList from '@/app/components/LinksList'
@@ -352,53 +352,7 @@ export default function GraceDetailPage({ params }: { params: Promise<{ id: stri
                 </div>
               )}
 
-              <div style={{
-                background: '#FEF3C7',
-                borderRadius: '0.75rem',
-                padding: '1rem'
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  marginBottom: '0.5rem',
-                  color: '#92400E'
-                }}>
-                  <Eye size={20} />
-                  <span style={{ fontWeight: '500' }}>Visibilité</span>
-                </div>
-                <p style={{ color: '#78350F', fontSize: '1.125rem' }}>
-                  {grace.visibilite === 'prive' ? 'Privé' :
-                    grace.visibilite === 'anonyme' ? 'Anonyme' : 'Public'}
-                </p>
-              </div>
 
-              {grace.statut_partage !== 'brouillon' && (
-                <div style={{
-                  background: '#FEF3C7',
-                  borderRadius: '0.75rem',
-                  padding: '1rem'
-                }}>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    marginBottom: '0.5rem',
-                    color: '#92400E'
-                  }}>
-                    <Share2 size={20} />
-                    <span style={{ fontWeight: '500' }}>Partage</span>
-                  </div>
-                  <p style={{
-                    color: grace.statut_partage === 'approuve' ? '#059669' : '#78350F',
-                    fontSize: '1.125rem',
-                    fontWeight: grace.statut_partage === 'approuve' ? '600' : '400'
-                  }}>
-                    {grace.statut_partage === 'propose' ? 'Proposé au partage' :
-                      grace.statut_partage === 'approuve' ? 'Partagé avec la communauté' : 'Refusé'}
-                  </p>
-                </div>
-              )}
             </div>
 
             {/* Tags */}

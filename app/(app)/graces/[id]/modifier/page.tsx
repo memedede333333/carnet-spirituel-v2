@@ -4,7 +4,7 @@ import { use, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/app/lib/supabase'
-import { Calendar, MapPin, Tag, Eye, ArrowLeft, Sparkles, Save } from 'lucide-react'
+import { Calendar, MapPin, Tag, ArrowLeft, Sparkles, Save } from 'lucide-react'
 
 interface Grace {
   id: string
@@ -25,7 +25,7 @@ export default function ModifierGracePage({ params }: { params: Promise<{ id: st
   const [lieu, setLieu] = useState('')
   const [tagInput, setTagInput] = useState('')
   const [tags, setTags] = useState<string[]>([])
-  const [visibilite, setVisibilite] = useState<'prive' | 'anonyme' | 'public'>('prive')
+
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -43,13 +43,12 @@ export default function ModifierGracePage({ params }: { params: Promise<{ id: st
         .single()
 
       if (error) throw error
-      
+
       setGrace(data)
       setTexte(data.texte)
       setDate(data.date)
       setLieu(data.lieu || '')
       setTags(data.tags || [])
-      setVisibilite(data.visibilite)
     } catch (error) {
       console.error('Erreur:', error)
       router.push('/graces')
@@ -74,7 +73,7 @@ export default function ModifierGracePage({ params }: { params: Promise<{ id: st
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!texte.trim()) {
       setError('Veuillez décrire la grâce reçue')
       return
@@ -90,8 +89,7 @@ export default function ModifierGracePage({ params }: { params: Promise<{ id: st
           texte: texte.trim(),
           date,
           lieu: lieu.trim() || null,
-          tags,
-          visibilite
+          tags
         })
         .eq('id', resolvedParams.id)
 
@@ -160,8 +158,8 @@ export default function ModifierGracePage({ params }: { params: Promise<{ id: st
               opacity: 0.8,
               transition: 'opacity 0.2s'
             }}
-            onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
-            onMouseLeave={(e) => e.currentTarget.style.opacity = '0.8'}>
+              onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+              onMouseLeave={(e) => e.currentTarget.style.opacity = '0.8'}>
               <ArrowLeft size={16} />
               Retour à la grâce
             </Link>
@@ -384,60 +382,6 @@ export default function ModifierGracePage({ params }: { params: Promise<{ id: st
               )}
             </div>
 
-            {/* Visibilité */}
-            <div style={{ marginBottom: '2rem' }}>
-              <label style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                marginBottom: '0.5rem',
-                fontWeight: '500',
-                color: '#78350F'
-              }}>
-                <Eye size={20} />
-                Visibilité
-              </label>
-              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                {(['prive', 'anonyme', 'public'] as const).map(v => (
-                  <label
-                    key={v}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      cursor: 'pointer',
-                      padding: '0.5rem 1rem',
-                      borderRadius: '0.5rem',
-                      background: visibilite === v ? '#FDE68A' : '#FEF3C7',
-                      transition: 'all 0.2s'
-                    }}
-                  >
-                    <input
-                      type="radio"
-                      name="visibilite"
-                      value={v}
-                      checked={visibilite === v}
-                      onChange={(e) => setVisibilite(e.target.value as typeof visibilite)}
-                      style={{ display: 'none' }}
-                    />
-                    <span style={{ color: '#78350F' }}>
-                      {v === 'prive' ? 'Privé' : v === 'anonyme' ? 'Anonyme' : 'Public'}
-                    </span>
-                  </label>
-                ))}
-              </div>
-              <p style={{
-                fontSize: '0.875rem',
-                color: '#92400E',
-                marginTop: '0.5rem',
-                opacity: 0.8
-              }}>
-                {visibilite === 'prive' && 'Visible uniquement par vous'}
-                {visibilite === 'anonyme' && 'Peut être partagé sans votre nom'}
-                {visibilite === 'public' && 'Peut être partagé avec votre nom'}
-              </p>
-            </div>
-
             {/* Boutons */}
             <div style={{
               display: 'flex',
@@ -466,7 +410,7 @@ export default function ModifierGracePage({ params }: { params: Promise<{ id: st
               >
                 Annuler
               </Link>
-              
+
               <button
                 type="submit"
                 disabled={saving}

@@ -10,13 +10,12 @@ export default function NouvelleGracePage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  
+
   const [texte, setTexte] = useState('')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [lieu, setLieu] = useState('')
   const [tags, setTags] = useState('')
-  const [visibilite, setVisibilite] = useState<'prive' | 'anonyme' | 'public'>('prive')
-  const [proposerPartage, setProposerPartage] = useState(false)
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -25,7 +24,7 @@ export default function NouvelleGracePage() {
 
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      
+
       if (!user) {
         router.push('/login')
         return
@@ -44,8 +43,8 @@ export default function NouvelleGracePage() {
           date,
           lieu: lieu || null,
           tags: tagsArray,
-          visibilite,
-          statut_partage: proposerPartage ? 'propose' : 'brouillon'
+          visibilite: 'prive',
+          statut_partage: 'brouillon'
         })
 
       if (error) throw error
@@ -83,12 +82,12 @@ export default function NouvelleGracePage() {
             opacity: 0.8,
             transition: 'opacity 0.2s'
           }}
-          onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
-          onMouseLeave={(e) => e.currentTarget.style.opacity = '0.8'}>
+            onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+            onMouseLeave={(e) => e.currentTarget.style.opacity = '0.8'}>
             <ArrowLeft size={16} />
             Retour aux grâces
           </Link>
-          
+
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -269,136 +268,6 @@ export default function NouvelleGracePage() {
             />
           </div>
 
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{
-              display: 'block',
-              marginBottom: '0.75rem',
-              fontWeight: '500',
-              color: '#78350F'
-            }}>
-              Visibilité
-            </label>
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.75rem'
-            }}>
-              <label style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: '0.75rem',
-                padding: '1rem',
-                backgroundColor: visibilite === 'prive' ? '#FEF3C7' : 'transparent',
-                borderRadius: '0.5rem',
-                cursor: 'pointer',
-                transition: 'background-color 0.2s'
-              }}>
-                <input
-                  type="radio"
-                  value="prive"
-                  checked={visibilite === 'prive'}
-                  onChange={(e) => setVisibilite(e.target.value as any)}
-                  style={{
-                    marginTop: '0.125rem',
-                    accentColor: '#FCD34D'
-                  }}
-                />
-                <div>
-                  <span style={{ color: '#78350F', fontWeight: '500' }}>Privée</span>
-                  <small style={{ display: 'block', color: '#92400E', opacity: 0.8, marginTop: '0.25rem' }}>
-                    Visible uniquement par moi
-                  </small>
-                </div>
-              </label>
-              
-              <label style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: '0.75rem',
-                padding: '1rem',
-                backgroundColor: visibilite === 'anonyme' ? '#FEF3C7' : 'transparent',
-                borderRadius: '0.5rem',
-                cursor: 'pointer',
-                transition: 'background-color 0.2s'
-              }}>
-                <input
-                  type="radio"
-                  value="anonyme"
-                  checked={visibilite === 'anonyme'}
-                  onChange={(e) => setVisibilite(e.target.value as any)}
-                  style={{
-                    marginTop: '0.125rem',
-                    accentColor: '#FCD34D'
-                  }}
-                />
-                <div>
-                  <span style={{ color: '#78350F', fontWeight: '500' }}>Anonyme</span>
-                  <small style={{ display: 'block', color: '#92400E', opacity: 0.8, marginTop: '0.25rem' }}>
-                    Partageable sans mon nom
-                  </small>
-                </div>
-              </label>
-              
-              <label style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: '0.75rem',
-                padding: '1rem',
-                backgroundColor: visibilite === 'public' ? '#FEF3C7' : 'transparent',
-                borderRadius: '0.5rem',
-                cursor: 'pointer',
-                transition: 'background-color 0.2s'
-              }}>
-                <input
-                  type="radio"
-                  value="public"
-                  checked={visibilite === 'public'}
-                  onChange={(e) => setVisibilite(e.target.value as any)}
-                  style={{
-                    marginTop: '0.125rem',
-                    accentColor: '#FCD34D'
-                  }}
-                />
-                <div>
-                  <span style={{ color: '#78350F', fontWeight: '500' }}>Publique</span>
-                  <small style={{ display: 'block', color: '#92400E', opacity: 0.8, marginTop: '0.25rem' }}>
-                    Partageable avec mon prénom
-                  </small>
-                </div>
-              </label>
-            </div>
-          </div>
-
-          {(visibilite === 'anonyme' || visibilite === 'public') && (
-            <div style={{
-              marginBottom: '2rem',
-              padding: '1rem',
-              backgroundColor: '#FEF3C7',
-              borderRadius: '0.5rem'
-            }}>
-              <label style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                cursor: 'pointer'
-              }}>
-                <input
-                  type="checkbox"
-                  checked={proposerPartage}
-                  onChange={(e) => setProposerPartage(e.target.checked)}
-                  style={{
-                    width: '20px',
-                    height: '20px',
-                    accentColor: '#FCD34D'
-                  }}
-                />
-                <span style={{ color: '#78350F', fontWeight: '500' }}>
-                  Proposer cette grâce au partage communautaire
-                </span>
-              </label>
-            </div>
-          )}
-
           <div style={{
             display: 'flex',
             gap: '1rem',
@@ -414,15 +283,15 @@ export default function NouvelleGracePage() {
               transition: 'all 0.2s',
               display: 'inline-block'
             }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#FEF3C7'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent'
-            }}>
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#FEF3C7'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent'
+              }}>
               Annuler
             </Link>
-            
+
             <button
               type="submit"
               disabled={loading}
@@ -474,7 +343,7 @@ export default function NouvelleGracePage() {
           </div>
         </form>
       </div>
-      
+
       <style jsx>{`
         @keyframes spin {
           to { transform: rotate(360deg); }
