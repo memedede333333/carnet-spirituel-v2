@@ -354,8 +354,8 @@ export default function OnboardingModal({ userName, userId, onComplete }: Onboar
                                     key={index}
                                     onClick={() => setCurrentSlide(index)}
                                     className={`rounded-full transition-all duration-300 ${index === currentSlide
-                                            ? 'w-10 h-3 bg-gradient-to-r from-sky-500 to-blue-600'
-                                            : 'w-3 h-3 bg-gray-300 hover:bg-gray-400 hover:scale-125'
+                                        ? 'w-10 h-3 bg-gradient-to-r from-sky-500 to-blue-600'
+                                        : 'w-3 h-3 bg-gray-300 hover:bg-gray-400 hover:scale-125'
                                         }`}
                                     aria-label={`Aller à la slide ${index + 1}`}
                                 />
