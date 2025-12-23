@@ -125,6 +125,21 @@ export default function AuthForm({ mode, showResetLink = false }: AuthFormProps)
 
             if (insertError) {
               console.error('Erreur création profil:', insertError)
+            } else {
+              // Envoyer l'email de bienvenue (première connexion)
+              try {
+                await fetch('/api/send-welcome-email', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    userEmail: data.user.email,
+                    userName: data.user.user_metadata?.prenom || 'Utilisateur'
+                  })
+                })
+              } catch (emailError) {
+                console.error('Erreur envoi email bienvenue:', emailError)
+                // Ne pas bloquer la connexion si l'email échoue
+              }
             }
           }
 

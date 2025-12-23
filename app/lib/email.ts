@@ -494,3 +494,373 @@ export async function sendModeratorNotification(
     html,
   });
 }
+
+/**
+ * Email de bienvenue après confirmation du compte
+ */
+export async function sendWelcomeEmail(
+  userEmail: string,
+  userName: string
+) {
+  const html = `
+    <!DOCTYPE html>
+    <html lang="fr">
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+      <style>
+        body { 
+          font-family: 'Inter', -apple-system, sans-serif; 
+          line-height: 1.6; 
+          color: #1f2345; 
+          background: #f9f9f9;
+          margin: 0;
+          padding: 20px;
+        }
+        .container { 
+          max-width: 600px; 
+          margin: 0 auto; 
+          background: white;
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .header { 
+          background: linear-gradient(135deg, #0EA5E9 0%, #38BDF8 100%); 
+          color: white; 
+          padding: 32px; 
+          text-align: center; 
+        }
+        .header h1 {
+          font-family: 'Crimson Text', Georgia, serif;
+          font-size: 1.75rem;
+          font-weight: 600;
+          margin: 0 0 8px 0;
+        }
+        .header p {
+          margin: 0;
+          font-size: 0.95rem;
+          opacity: 0.95;
+        }
+        .content { 
+          padding: 32px; 
+        }
+        .greeting {
+          font-size: 1rem;
+          color: #6b7280;
+          margin-bottom: 16px;
+        }
+        .intro {
+          font-size: 1rem;
+          color: #1f2345;
+          margin-bottom: 24px;
+          line-height: 1.6;
+        }
+        
+        .section-title {
+          font-family: 'Crimson Text', Georgia, serif;
+          font-size: 1.3rem;
+          font-weight: 600;
+          color: #1f2345;
+          margin: 32px 0 16px 0;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        
+        .modules-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 12px;
+          margin-bottom: 24px;
+        }
+        .module-card {
+          background: #fafafa;
+          border-radius: 8px;
+          padding: 16px;
+          border-left: 3px solid;
+        }
+        .module-card.grace { border-color: #F59E0B; }
+        .module-card.priere { border-color: #6366F1; }
+        .module-card.ecriture { border-color: #10B981; }
+        .module-card.parole { border-color: #0EA5E9; }
+        .module-card.rencontre { border-color: #F43F5E; }
+        
+        .module-card .emoji {
+          font-size: 1.5rem;
+          margin-bottom: 8px;
+          display: block;
+        }
+        .module-card .title {
+          font-weight: 600;
+          font-size: 0.95rem;
+          color: #1f2345;
+          margin-bottom: 6px;
+        }
+        .module-card .desc {
+          font-size: 0.85rem;
+          color: #6b7280;
+          line-height: 1.5;
+        }
+        
+        .feature-box {
+          background: linear-gradient(135deg, #E0F2FE, #F0F9FF);
+          border-radius: 8px;
+          padding: 20px;
+          margin: 20px 0;
+          border-left: 4px solid #0EA5E9;
+        }
+        .feature-box h3 {
+          font-family: 'Crimson Text', Georgia, serif;
+          font-size: 1.1rem;
+          font-weight: 600;
+          color: #075985;
+          margin: 0 0 12px 0;
+        }
+        .feature-box p {
+          margin: 8px 0;
+          font-size: 0.9rem;
+          color: #0c4a6e;
+        }
+        .feature-box ul {
+          margin: 12px 0;
+          padding-left: 20px;
+        }
+        .feature-box li {
+          margin: 6px 0;
+          font-size: 0.9rem;
+          color: #0c4a6e;
+        }
+        .feature-box .quote {
+          font-style: italic;
+          font-size: 0.9rem;
+          color: #0369a1;
+          margin-top: 12px;
+          padding-top: 12px;
+          border-top: 1px solid #bae6fd;
+        }
+        
+        .fioretti-box {
+          background: linear-gradient(135deg, #FFFBEB, #FEF3C7);
+          border-radius: 8px;
+          padding: 20px;
+          margin: 20px 0;
+          border-left: 4px solid #F59E0B;
+        }
+        .fioretti-box h3 {
+          font-family: 'Crimson Text', Georgia, serif;
+          font-size: 1.1rem;
+          font-weight: 600;
+          color: #92400e;
+          margin: 0 0 12px 0;
+        }
+        .fioretti-box p {
+          margin: 8px 0;
+          font-size: 0.9rem;
+          color: #78350f;
+        }
+        .fioretti-box ul {
+          margin: 12px 0;
+          padding-left: 20px;
+        }
+        .fioretti-box li {
+          margin: 6px 0;
+          font-size: 0.9rem;
+          color: #78350f;
+        }
+        
+        .cta-section {
+          background: #f8fafc;
+          border-radius: 8px;
+          padding: 24px;
+          margin: 24px 0;
+          text-align: center;
+        }
+        .cta-section h3 {
+          font-family: 'Crimson Text', Georgia, serif;
+          font-size: 1.2rem;
+          font-weight: 600;
+          color: #1f2345;
+          margin: 0 0 16px 0;
+        }
+        .cta-section ol {
+          text-align: left;
+          margin: 16px auto;
+          max-width: 400px;
+          padding-left: 20px;
+        }
+        .cta-section li {
+          margin: 10px 0;
+          font-size: 0.95rem;
+          color: #4b5563;
+        }
+        .button { 
+          display: inline-block; 
+          background: linear-gradient(135deg, #0EA5E9, #0284C7); 
+          color: white; 
+          padding: 14px 32px; 
+          text-decoration: none; 
+          border-radius: 8px; 
+          font-weight: 600;
+          font-size: 1rem;
+          margin: 16px 0;
+          box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+        }
+        
+        .quote-box {
+          background: linear-gradient(135deg, #E0F2FE, #F0F9FF);
+          border-radius: 8px;
+          padding: 20px;
+          margin: 24px 0;
+          text-align: center;
+          border: 1px solid #bae6fd;
+        }
+        .quote-box p {
+          font-family: 'Crimson Text', Georgia, serif;
+          font-style: italic;
+          font-size: 1.05rem;
+          color: #075985;
+          margin: 0 0 8px 0;
+          line-height: 1.6;
+        }
+        .quote-box .ref {
+          font-weight: 600;
+          font-size: 0.9rem;
+          color: #0EA5E9;
+        }
+        
+        .footer { 
+          text-align: center; 
+          padding: 24px; 
+          background: #fafafa;
+          border-top: 1px solid #e9e8f0;
+          font-size: 0.85rem;
+          color: #9ca3af;
+        }
+        .footer a {
+          color: #6b7280;
+          text-decoration: none;
+        }
+        
+        @media only screen and (max-width: 600px) {
+          .modules-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>🕊️ Bienvenue dans votre Carnet Spirituel !</h1>
+          <p>Cultivez la présence de Dieu dans vos vies</p>
+        </div>
+        
+        <div class="content">
+          <p class="greeting">Bonjour ${userName},</p>
+          <p class="intro">
+            Nous sommes heureux de vous accueillir dans votre espace de contemplation. 
+            Découvrez comment <strong>discerner le fil rouge de l'action de Dieu</strong> dans votre quotidien.
+          </p>
+          
+          <h2 class="section-title">📝 Les 5 modules - Notez l'action de Dieu</h2>
+          
+          <div class="modules-grid">
+            <div class="module-card grace">
+              <span class="emoji">✨</span>
+              <div class="title">Grâces reçues</div>
+              <div class="desc">Notez les bénédictions, les petits miracles du quotidien.</div>
+            </div>
+            
+            <div class="module-card priere">
+              <span class="emoji">🙏</span>
+              <div class="title">Prières</div>
+              <div class="desc">Confiez vos intentions et suivez comment le Seigneur y répond.</div>
+            </div>
+            
+            <div class="module-card ecriture">
+              <span class="emoji">📖</span>
+              <div class="title">Écritures</div>
+              <div class="desc">Méditez la Parole de Dieu et notez ce qui vous touche.</div>
+            </div>
+            
+            <div class="module-card parole">
+              <span class="emoji">🕊️</span>
+              <div class="title">Paroles</div>
+              <div class="desc">Recueillez les inspirations et messages du Saint-Esprit.</div>
+            </div>
+          </div>
+          
+          <div class="module-card rencontre" style="max-width: 100%;">
+            <span class="emoji">🤝</span>
+            <div class="title">Rencontres missionnaires</div>
+            <div class="desc">Gardez mémoire des rencontres providentielles.</div>
+          </div>
+          
+          <div class="feature-box">
+            <h3>🌿 LA RELECTURE - Contemplez l'action divine</h3>
+            <p><strong>Reliez spirituellement vos notes</strong> pour découvrir le fil rouge de Dieu :</p>
+            <ul>
+              <li>Créez des <strong>liens</strong> entre vos grâces, prières, rencontres</li>
+              <li>Voyez comment cette prière <strong>exauce</strong> cette grâce</li>
+              <li>Découvrez comment cette parole <strong>accomplit</strong> cet événement</li>
+            </ul>
+            <p><strong>Contemplez sous 5 angles différents :</strong></p>
+            <ul>
+              <li>📅 <strong>Chronologique</strong> - Revivez votre parcours spirituel</li>
+              <li>📖 <strong>Thématique</strong> - Par type (grâces, prières...)</li>
+              <li>❤️ <strong>Mouvements spirituels</strong> - Consolations et désolations</li>
+              <li>🌸 <strong>Jardin des grâces</strong> - Vue contemplative</li>
+              <li>👁️ <strong>Vue d'ensemble</strong> - Synthèse de votre cheminement</li>
+            </ul>
+            <p class="quote">« Chercher et trouver Dieu en toutes choses » - Saint Ignace de Loyola</p>
+          </div>
+          
+          <div class="fioretti-box">
+            <h3>🌸 Le Jardin des Fioretti - Émerveillez-vous ensemble</h3>
+            <p><strong>Partagez les œuvres de Dieu</strong> et <strong>découvrez ce que Dieu fait dans la vie des autres</strong>.</p>
+            <ul>
+              <li>🌟 <strong>S'émerveiller</strong> de ce que Dieu accomplit</li>
+              <li>🙏 <strong>Rendre grâce ensemble</strong> pour ses bienfaits</li>
+              <li>💝 <strong>Encourager</strong> la communauté</li>
+            </ul>
+            <p>Partage <strong>anonyme ou public</strong>, modéré avec bienveillance.</p>
+          </div>
+          
+          <div class="cta-section">
+            <h3>🎯 Vos premiers pas</h3>
+            <ol>
+              <li>📝 <strong>Notez votre première grâce</strong></li>
+              <li>🙏 <strong>Confiez une intention</strong></li>
+              <li>🌿 <strong>Découvrez la Relecture</strong></li>
+            </ol>
+            <center>
+              <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard" class="button">
+                Accéder à mon carnet
+              </a>
+            </center>
+          </div>
+          
+          <div class="quote-box">
+            <p>« Rendez grâce en toute circonstance, car c'est la volonté de Dieu à votre égard dans le Christ Jésus. »</p>
+            <div class="ref">1 Thessaloniciens 5, 18</div>
+          </div>
+        </div>
+        
+        <div class="footer">
+          <strong>Carnet Spirituel</strong> · Cultivez la présence de Dieu dans vos vies
+          <br>
+          <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/charte">Charte du site</a>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  return sendEmail({
+    to: userEmail,
+    subject: '🕊️ Bienvenue dans votre Carnet Spirituel',
+    html,
+  });
+}
