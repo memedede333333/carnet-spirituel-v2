@@ -134,9 +134,19 @@ export interface Fioretto {
   created_at: Date;
   // Relations (pour l'affichage)
   interactions?: FiorettoInteraction[];
+  profiles?: {
+    first_name: string;
+  };
   _count?: {
     soutien: number;
     action_grace: number;
+  };
+  // Infos auteur (pour modération)
+  author?: {
+    id: string;
+    prenom: string;
+    nom?: string;
+    email: string;
   };
 }
 

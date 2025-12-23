@@ -71,6 +71,14 @@ export default function FiorettoCard({ fioretto }: FiorettoCardProps) {
         }
     };
 
+    const textContent = content.texte || content.sujet || "";
+    const messageContent = fioretto.message_ajout || "";
+
+    // Détecter si le contenu dépasse le cadre
+    // ~120 caractères ≈ 3 lignes de texte principal
+    // ~80 caractères ≈ 2 lignes de commentaire
+    const isContentOverflowing = textContent.length > 120 || messageContent.length > 80;
+
     return (
         <div
             className="fioretto-card"
@@ -80,7 +88,10 @@ export default function FiorettoCard({ fioretto }: FiorettoCardProps) {
                 boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
                 overflow: 'hidden',
                 border: '1px solid #F3F4F6',
-                transition: 'border-color 0.3s ease, border-width 0.3s ease'
+                transition: 'border-color 0.3s ease, border-width 0.3s ease',
+                display: 'flex',
+                flexDirection: 'column',
+                height: '100%' // Hauteur uniforme
             }}>
             {/* Bandeau supérieur */}
             <div style={{
@@ -117,92 +128,109 @@ export default function FiorettoCard({ fioretto }: FiorettoCardProps) {
                 </span>
             </div>
 
-            {/* Contenu principal */}
-            <div style={{ padding: '1.5rem' }}>
-                {/* Zone texte principal - hauteur fixe */}
+            {/* Contenu principal - flex pour pousser le footer en bas */}
+            <div style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                {/* Zone texte principal - 3 lignes avec ellipsis */}
                 <div style={{
                     background: '#FFFEF7',
                     border: '2px solid #FEF3C7',
                     borderRadius: '0.75rem',
                     padding: '1.25rem',
                     marginBottom: '1rem',
-                    height: '140px',
+                    minHeight: '110px',
+                    maxHeight: '110px',
                     overflow: 'hidden',
                     position: 'relative'
                 }}>
                     <p style={{
-                        fontSize: '1.125rem',
-                        lineHeight: '1.8',
+                        fontSize: '1.05rem',
+                        lineHeight: '1.6',
                         color: '#1F2937',
                         fontStyle: 'italic',
                         margin: 0,
                         display: '-webkit-box',
-                        WebkitLineClamp: 4,
+                        WebkitLineClamp: 3,
                         WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden'
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
                     }}>
-                        « {content.texte || content.sujet || "..."} »
+                        « {textContent} »
                     </p>
-
-                    {/* Indicateur de troncature */}
-                    {(content.texte || content.sujet || "").length > 150 && (
-                        <div style={{
-                            position: 'absolute',
-                            bottom: '12px',
-                            right: '16px',
-                            fontSize: '1rem',
-                            color: '#92400E',
-                            fontStyle: 'italic',
-                            fontWeight: '500',
-                            textShadow: '0 0 8px rgba(255, 255, 255, 0.9)'
-                        }}>
-                            (...)
-                        </div>
-                    )}
                 </div>
 
                 {content.detail && (
                     <p style={{
                         fontSize: '0.875rem',
                         color: '#6B7280',
-                        marginBottom: '1rem'
+                        marginBottom: '1rem',
+                        minHeight: '1.5rem' // Hauteur fixe pour éviter les décalages
                     }}>
                         📍 {content.detail}
                     </p>
                 )}
 
-                {/* Message utilisateur - espace réservé fixe */}
-                {fioretto.message_ajout && (
-                    <div style={{
-                        minHeight: '60px',
-                        maxHeight: '80px',
-                        overflow: 'hidden',
-                        paddingTop: '1rem',
-                        borderTop: '1px solid rgba(254, 243, 199, 0.6)'
-                    }}>
+                {/* Message utilisateur - 2 lignes avec ellipsis */}
+                <div style={{
+                    minHeight: '65px',
+                    paddingTop: fioretto.message_ajout ? '0.75rem' : 0,
+                    borderTop: fioretto.message_ajout ? '1px solid rgba(254, 243, 199, 0.6)' : 'none',
+                    marginBottom: '0.5rem'
+                }}>
+                    {fioretto.message_ajout && (
                         <p style={{
                             fontSize: '0.95rem',
                             color: '#78350F',
                             fontStyle: 'italic',
                             lineHeight: '1.6',
                             margin: 0,
+                            marginBottom: '0.5rem',
                             display: '-webkit-box',
                             WebkitLineClamp: 2,
                             WebkitBoxOrient: 'vertical',
-                            overflow: 'hidden'
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
                         }}>
                             "{fioretto.message_ajout}"
                         </p>
-                        <p style={{
-                            fontSize: '0.75rem',
-                            color: '#92400E',
-                            marginTop: '0.5rem',
-                            opacity: 0.7
+                    )}
+                </div>
+
+                {/* Bloc Bas de carte : Indicateur + Signature - Toujours en bas */}
+                <div style={{ marginTop: 'auto' }}>
+                    {/* Indicateur "Lire la suite" - juste au dessus de la signature */}
+                    {isContentOverflowing && (
+                        <div style={{
+                            textAlign: 'center',
+                            marginBottom: '0.5rem'
                         }}>
-                            — {fioretto.anonyme ? "Anonyme" : "Un frère/une sœur"}
-                        </p>
-                    </div>
-                )}
+                            <span className="read-more-indicator" style={{
+                                fontSize: '0.8rem',
+                                color: '#92400E',
+                                fontStyle: 'italic',
+                                opacity: 0.6,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.25rem',
+                                transition: 'all 0.3s ease'
+                            }}>
+                                👁️ Cliquer pour lire la suite
+                            </span>
+                        </div>
+                    )}
+
+                    {/* Signature - Tout en bas */}
+                    <p style={{
+                        fontSize: '0.75rem',
+                        color: '#92400E',
+                        opacity: 0.7,
+                        margin: 0,
+                        marginBottom: '0.75rem',
+                        textAlign: 'right',
+                        fontStyle: 'italic'
+                    }}>
+                        — {fioretto.anonyme ? "Un frère/une sœur" : (fioretto.pseudo || "Un frère/une sœur")}
+                    </p>
+                </div>
             </div>
 
             {/* Footer - Actions */}

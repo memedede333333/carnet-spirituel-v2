@@ -178,18 +178,25 @@ export default function FiorettiPage() {
                                         borderRadius: '1rem',
                                         padding: '2px',
                                         background: 'transparent',
-                                        position: 'relative'
+                                        position: 'relative',
+                                        display: 'flex' // Pour que la carte enfant prenne toute la hauteur
                                     }}
                                     onClick={() => setSelectedFioretto(fioretto)}
                                     onMouseEnter={(e) => {
                                         e.currentTarget.style.transform = 'translateY(-12px)';
                                         e.currentTarget.style.filter = 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.15))';
                                         e.currentTarget.style.background = `linear-gradient(135deg, ${config.bg}, transparent)`;
-                                        // Ajouter une bordure colorée subtile
+                                        // Ajouter une bordure colorée subtile avec box-shadow (pas borderWidth pour éviter le reflow)
                                         const card = e.currentTarget.querySelector('.fioretto-card') as HTMLElement;
                                         if (card) {
-                                            card.style.borderColor = config.border;
-                                            card.style.borderWidth = '2px';
+                                            card.style.boxShadow = `0 0 0 2px ${config.border}`;
+                                        }
+                                        // Rendre l'indicateur "Lire la suite" plus visible
+                                        const indicator = e.currentTarget.querySelector('.read-more-indicator') as HTMLElement;
+                                        if (indicator) {
+                                            indicator.style.opacity = '1';
+                                            indicator.style.color = config.text;
+                                            indicator.style.fontWeight = '600';
                                         }
                                     }}
                                     onMouseLeave={(e) => {
@@ -198,8 +205,14 @@ export default function FiorettiPage() {
                                         e.currentTarget.style.background = 'transparent';
                                         const card = e.currentTarget.querySelector('.fioretto-card') as HTMLElement;
                                         if (card) {
-                                            card.style.borderColor = '#F3F4F6';
-                                            card.style.borderWidth = '1px';
+                                            card.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.05)';
+                                        }
+                                        // Remettre l'indicateur à son état normal
+                                        const indicator = e.currentTarget.querySelector('.read-more-indicator') as HTMLElement;
+                                        if (indicator) {
+                                            indicator.style.opacity = '0.6';
+                                            indicator.style.color = '#92400E';
+                                            indicator.style.fontWeight = 'normal';
                                         }
                                     }}
                                 >
@@ -424,19 +437,24 @@ function FiorettoDetailModal({ fioretto, onClose }: { fioretto: Fioretto; onClos
                                 color: config.text,
                                 fontStyle: 'italic',
                                 lineHeight: '1.7',
-                                marginBottom: '0.75rem'
+                                marginBottom: 0
                             }}>
                                 "{fioretto.message_ajout}"
                             </p>
-                            <p style={{
-                                fontSize: '0.875rem',
-                                color: config.text,
-                                opacity: 0.7
-                            }}>
-                                — {fioretto.anonyme ? "Anonyme" : fioretto.pseudo || "Un frère/une sœur"}
-                            </p>
                         </div>
                     )}
+
+                    {/* Signature - toujours visible */}
+                    <p style={{
+                        fontSize: '0.875rem',
+                        color: config.text,
+                        opacity: 0.7,
+                        textAlign: 'right',
+                        fontStyle: 'italic',
+                        marginBottom: '1.5rem'
+                    }}>
+                        — {fioretto.anonyme ? "Un frère/une sœur" : (fioretto.pseudo || "Un frère/une sœur")}
+                    </p>
 
                     {/* Note : Les interactions sont déjà gérées dans FiorettoCard */}
                     <div style={{

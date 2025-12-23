@@ -144,6 +144,18 @@ export default function ShareFiorettoModal({ isOpen, onClose, element, elementTy
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error("Non authentifié");
 
+            // Récupérer le prénom du profil si non-anonyme
+            let userFirstName = null;
+            if (!anonyme) {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('first_name')
+                    .eq('id', user.id)
+                    .single();
+
+                userFirstName = profile?.first_name || null;
+            }
+
             const contenuSnapshot = {
                 texte: contenuEditable,
                 detail: element.lieu || element.reference || element.contexte,
@@ -159,6 +171,7 @@ export default function ShareFiorettoModal({ isOpen, onClose, element, elementTy
                     contenu_affiche: contenuSnapshot,
                     message_ajout: message || null,
                     anonyme,
+                    pseudo: userFirstName, // Prénom du profil si non-anonyme
                     statut: 'propose'
                 });
 
@@ -176,6 +189,47 @@ export default function ShareFiorettoModal({ isOpen, onClose, element, elementTy
                     .from(tableName)
                     .update({ statut_partage: 'propose' })
                     .eq('id', element.id);
+            }
+
+            // Envoyer un email à tous les modérateurs
+            try {
+                // Récupérer les modérateurs
+                const { data: moderators } = await supabase
+                    .from('profiles')
+                    .select('email, prenom, nom')
+                    .in('role', ['superadmin', 'moderateur']);
+
+                // Récupérer les infos de l'auteur
+                const { data: author } = await supabase
+                    .from('profiles')
+                    .select('prenom, nom, email')
+                    .eq('id', user.id)
+                    .single();
+
+                if (moderators && moderators.length > 0 && author) {
+                    // Envoyer un email à chaque modérateur
+                    for (const mod of moderators) {
+                        await fetch('/api/send-moderator-email', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                moderatorEmail: mod.email,
+                                moderatorName: mod.prenom || 'Modérateur',
+                                fiorettoData: {
+                                    fiorettoType: elementType,
+                                    authorName: `${author.prenom} ${author.nom || ''}`.trim(),
+                                    authorEmail: author.email,
+                                    content: contenuEditable,
+                                    isAnonymous: anonyme,
+                                    submittedAt: new Date()
+                                }
+                            })
+                        });
+                    }
+                }
+            } catch (emailError) {
+                console.error('Erreur envoi email modérateurs:', emailError);
+                // Ne pas bloquer la soumission si l'email échoue
             }
 
             alert("Votre fioretti a été envoyé en modération 🌸");
