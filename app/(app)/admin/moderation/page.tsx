@@ -43,13 +43,10 @@ export default function ModerationPage() {
                 return;
             }
 
-            // Construire la query avec les infos auteur
+            // Construire la query - SANS JOIN pour éviter les problèmes RLS
             let query = supabase
                 .from('fioretti')
-                .select(`
-                    *,
-                    author:profiles!user_id(id, prenom, nom, email)
-                `)
+                .select('*')
                 .eq('statut', statutFilter);
 
             // Filtrer archivés pour les validés
@@ -59,8 +56,30 @@ export default function ModerationPage() {
 
             const { data, error } = await query.order('created_at', { ascending: false });
 
-            if (error) throw error;
-            setFioretti(data as Fioretto[]);
+            if (error) {
+                console.error('❌ Erreur fetch fioretti:', error);
+                throw error;
+            }
+
+            // Ensuite, récupérer les infos auteur pour chaque fioretto (non-bloquant)
+            const fiorettiWithAuthors = await Promise.all(
+                (data || []).map(async (fioretto) => {
+                    try {
+                        const { data: authorData } = await supabase
+                            .from('profiles')
+                            .select('id, prenom, nom, email')
+                            .eq('id', fioretto.user_id)
+                            .single();
+
+                        return { ...fioretto, author: authorData };
+                    } catch {
+                        // Si on ne peut pas récupérer l'auteur, on continue quand même
+                        return fioretto;
+                    }
+                })
+            );
+
+            setFioretti(fiorettiWithAuthors as Fioretto[]);
 
         } catch (err) {
             console.error('Error:', err);
@@ -93,81 +112,105 @@ export default function ModerationPage() {
         const action = decision === 'approuve' ? 'approuver' : 'refuser';
         if (!confirm(`Êtes-vous sûr de vouloir ${action} ce fioretto ?`)) return;
 
+        const fioretto = fioretti.find(f => f.id === id);
+        if (!fioretto) {
+            alert("Fioretto introuvable");
+            return;
+        }
+
         try {
-            const fioretto = fioretti.find(f => f.id === id);
-            setFioretti(prev => prev.filter(f => f.id !== id));
-
             const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                alert("Vous devez être connecté");
+                return;
+            }
 
-            // Mettre à jour le fioretto
-            await supabase
+            // 1. Mettre à jour le fioretto dans la table fioretti
+            const { error: fiorettoError } = await supabase
                 .from('fioretti')
                 .update({
                     statut: decision,
-                    moderateur_id: user?.id,
-                    date_publication: decision === 'approuve' ? new Date().toISOString() : null
+                    moderateur_id: user.id,
+                    date_publication: decision === 'approuve' ? new Date().toISOString() : null,
+                    date_moderation: new Date().toISOString()
                 })
                 .eq('id', id);
 
-            // Mettre à jour l'élément source
-            if (fioretto) {
-                const tableMap: Record<string, string> = {
-                    grace: 'graces',
-                    priere: 'prieres',
-                    ecriture: 'paroles_ecriture',
-                    parole: 'paroles_connaissance',
-                    rencontre: 'rencontres_missionnaires'
-                };
+            if (fiorettoError) {
+                console.error('❌ Erreur mise à jour fioretto:', fiorettoError);
+                throw new Error(`Erreur mise à jour fioretto: ${fiorettoError.message}`);
+            }
 
-                const tableName = tableMap[fioretto.element_type];
-                if (tableName) {
-                    await supabase
-                        .from(tableName)
-                        .update({ statut_partage: decision })
-                        .eq('id', fioretto.element_id);
-                }
+            // 2. Mettre à jour l'élément source
+            const tableMap: Record<string, string> = {
+                grace: 'graces',
+                priere: 'prieres',
+                ecriture: 'paroles_ecriture',
+                parole: 'paroles_connaissance',
+                rencontre: 'rencontres_missionnaires'
+            };
 
-                // Créer notification pour l'auteur
-                const notifMessage = decision === 'approuve'
-                    ? 'Votre fioretto a été approuvé et est maintenant visible dans le Jardin des Fioretti.'
-                    : 'Votre fioretto n\'a pas été approuvé pour publication.';
+            const tableName = tableMap[fioretto.element_type];
+            if (tableName) {
+                const { error: sourceError } = await supabase
+                    .from(tableName)
+                    .update({ statut_partage: decision })
+                    .eq('id', fioretto.element_id);
 
-                await supabase
-                    .from('notifications')
-                    .insert({
-                        user_id: fioretto.user_id,
-                        type: decision === 'approuve' ? 'fioretto_approuve' : 'fioretto_refuse',
-                        fioretto_id: id,
-                        message: notifMessage
-                    });
-
-                // Envoyer email à l'auteur
-                const { data: author } = await supabase
-                    .from('profiles')
-                    .select('email, prenom')
-                    .eq('id', fioretto.user_id)
-                    .single();
-
-                if (author?.email) {
-                    // Extraire le texte du fioretto
-                    const content = typeof fioretto.contenu_affiche === 'string'
-                        ? JSON.parse(fioretto.contenu_affiche)
-                        : fioretto.contenu_affiche;
-                    const fiorettoText = content?.texte || '';
-
-                    await sendEmailNotification(
-                        author.email,
-                        author.prenom || 'Cher contributeur',
-                        decision,
-                        undefined,
-                        { type: fioretto.element_type, text: fiorettoText }
-                    );
+                if (sourceError) {
+                    console.error(`❌ Erreur mise à jour ${tableName}:`, sourceError);
+                    throw new Error(`Erreur mise à jour table source: ${sourceError.message}`);
                 }
             }
 
-        } catch (err) {
-            console.error('Moderation error:', err);
-            alert("Erreur lors de la modération");
+            // 3. Créer notification pour l'auteur
+            const notifMessage = decision === 'approuve'
+                ? 'Votre fioretto a été approuvé et est maintenant visible dans le Jardin des Fioretti.'
+                : 'Votre fioretto n\'a pas été approuvé pour publication.';
+
+            const { error: notifError } = await supabase
+                .from('notifications')
+                .insert({
+                    user_id: fioretto.user_id,
+                    type: decision === 'approuve' ? 'fioretto_approuve' : 'fioretto_refuse',
+                    fioretto_id: id,
+                    message: notifMessage
+                });
+
+            if (notifError) {
+                console.error('❌ Erreur création notification:', notifError);
+                // Non bloquant, on continue
+            }
+
+            // 4. Envoyer email à l'auteur
+            const { data: author } = await supabase
+                .from('profiles')
+                .select('email, prenom')
+                .eq('id', fioretto.user_id)
+                .single();
+
+            if (author?.email) {
+                const content = typeof fioretto.contenu_affiche === 'string'
+                    ? JSON.parse(fioretto.contenu_affiche)
+                    : fioretto.contenu_affiche;
+                const fiorettoText = content?.texte || '';
+
+                await sendEmailNotification(
+                    author.email,
+                    author.prenom || 'Cher contributeur',
+                    decision,
+                    undefined,
+                    { type: fioretto.element_type, text: fiorettoText }
+                );
+            }
+
+            // 5. Supprimer de l'UI UNIQUEMENT après succès complet
+            setFioretti(prev => prev.filter(f => f.id !== id));
+
+        } catch (err: any) {
+            console.error('❌ Erreur complète:', err);
+            alert(`Erreur lors de ${action === 'approuver' ? "l'approbation" : 'le refus'}:\n${err.message}`);
+            // Re-fetch pour synchroniser l'état
             checkPermissionsAndFetch();
         }
     };
