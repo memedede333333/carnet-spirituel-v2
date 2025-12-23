@@ -336,9 +336,9 @@
 
 .btn-secondary {
     padding: 0.75rem 1.5rem;
-    background: transparent;
-    color: var(--text-secondary, #6b7280);
-    border: 1px solid var(--border, #e9e8f0);
+    background: white;
+    color: var(--primary, #7b61ff);
+    border: 2px solid var(--primary, #7b61ff);
     border-radius: var(--radius, 1rem);
     font-weight: 500;
     font-size: 0.95rem;
@@ -349,7 +349,7 @@
 
 .btn-secondary:hover {
     background: var(--secondary, #e9e8f0);
-    color: var(--text, #1f2345);
+    transform: translateY(-1px);
 }
 
 /* ===== NAVIGATION ===== */

@@ -124,7 +124,7 @@ export default function OnboardingModal({ userName, userId, onComplete }: Onboar
                                 </div>
                                 <div className="detail-content">
                                     <h3>Prières</h3>
-                                    <p>Confiez vos intentions de prière et suivez comment le Seigneur y répond dans votre vie et celle des autres.</p>
+                                    <p>Notez pour qui vous priez (guérison, frères, intercession) et suivez les évolutions et réponses de Dieu.</p>
                                 </div>
                             </div>
                         </div>
@@ -150,8 +150,8 @@ export default function OnboardingModal({ userName, userId, onComplete }: Onboar
                                     <span className="detail-icon">🕊️</span>
                                 </div>
                                 <div className="detail-content">
-                                    <h3>Paroles inspirées</h3>
-                                    <p>Recueillez les inspirations et messages du Saint-Esprit, et notez leur accomplissement.</p>
+                                    <h3>Paroles de connaissance</h3>
+                                    <p>Notez les paroles que vous avez données ou reçues dans différents contextes, et leur accomplissement.</p>
                                 </div>
                             </div>
 
