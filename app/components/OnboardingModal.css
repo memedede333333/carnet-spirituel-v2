@@ -1,4 +1,4 @@
-/* Onboarding Modal - Charte graphique projet */
+/* Onboarding Modal - Style uniforme inspiré du dashboard */
 
 /* ===== OVERLAY & MODAL ===== */
 .onboarding-overlay {
@@ -23,7 +23,7 @@
     position: relative;
     width: 100%;
     max-width: 700px;
-    height: 600px;
+    max-height: 90vh;
     background: #ffffff;
     border-radius: var(--radius-lg, 1.5rem);
     box-shadow: var(--shadow-xl, 0 20px 25px -5px rgba(0, 0, 0, 0.1));
@@ -33,7 +33,7 @@
     overflow: hidden;
 }
 
-.onboarding-header-gradient {
+.onboarding-header-line {
     position: absolute;
     top: 0;
     left: 0;
@@ -63,150 +63,205 @@
     color: var(--text, #1f2345);
 }
 
-/* ===== SLIDES CONTAINER ===== */
-.onboarding-slides {
+/* ===== CONTENT ===== */
+.onboarding-content {
     flex: 1;
-    padding: 4rem 3rem 2rem;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    padding: 3rem 2rem 2rem;
+    overflow-y: auto;
 }
 
 .onboarding-slide {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
     animation: slideIn 0.3s ease-out;
-    text-align: center;
 }
 
 /* ===== SLIDE 1: BIENVENUE ===== */
-.onboarding-welcome h1 {
+.onboarding-main-title {
     font-family: 'Crimson Text', Georgia, serif;
-    font-size: 3rem;
+    font-size: 2.5rem;
     font-weight: 600;
     color: var(--text, #1f2345);
-    margin-bottom: 1rem;
+    text-align: center;
+    margin-bottom: 0.75rem;
 }
 
-.onboarding-tagline {
-    font-size: 1.25rem;
+.onboarding-main-subtitle {
+    font-size: 1.125rem;
     color: var(--text-secondary, #6b7280);
-    font-family: 'Inter', sans-serif;
-    max-width: 500px;
+    font-style: italic;
+    text-align: center;
+    margin-bottom: 2.5rem;
 }
 
-/* ===== TYPOGRAPHY COMMUNE ===== */
-.onboarding-section-title {
-    font-family: 'Crimson Text', Georgia, serif;
-    font-size: 2rem;
-    font-weight: 600;
-    color: var(--text, #1f2345);
-    margin-bottom: 0.5rem;
+.onboarding-mini-modules {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    max-width: 600px;
+    margin: 0 auto;
 }
 
-.onboarding-section-subtitle {
-    font-size: 1rem;
-    color: var(--text-secondary, #6b7280);
-    margin-bottom: 2rem;
-}
-
-/* ===== SLIDE 2: MODULES ===== */
-.onboarding-modules-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-    width: 100%;
-    max-width: 550px;
-}
-
-.onboarding-module {
+.mini-module {
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 0.5rem;
+}
+
+.mini-icon-wrapper {
+    width: 50px;
+    height: 50px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
     justify-content: center;
-    padding: 1.5rem;
-    border-radius: var(--radius, 1rem);
-    border: 2px solid;
-    transition: all 0.2s;
-    cursor: default;
+    box-shadow: var(--shadow-lg, 0 10px 15px -3px rgba(0, 0, 0, 0.08));
+    transition: transform 0.2s;
 }
 
-.onboarding-module.full-width {
-    grid-column: 1 / -1;
+.mini-module:hover .mini-icon-wrapper {
+    transform: scale(1.1);
 }
 
-.onboarding-module .module-emoji {
+.mini-icon {
+    font-size: 1.5rem;
+}
+
+.mini-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary, #6b7280);
+    font-weight: 500;
+}
+
+/* Couleurs des mini-modules (fond gradient) */
+.mini-module.grace .mini-icon-wrapper {
+    background: linear-gradient(135deg, #fffbeb, #fff7ed);
+}
+
+.mini-module.priere .mini-icon-wrapper {
+    background: linear-gradient(135deg, #eef2ff, #dbeafe);
+}
+
+.mini-module.ecriture .mini-icon-wrapper {
+    background: linear-gradient(135deg, #ecfdf5, #f0fdfa);
+}
+
+.mini-module.parole .mini-icon-wrapper {
+    background: linear-gradient(135deg, #f0f9ff, #eff6ff);
+}
+
+.mini-module.rencontre .mini-icon-wrapper {
+    background: linear-gradient(135deg, #e0f2fe, #dbeafe);
+}
+
+/* ===== SLIDES 2-5: MODULES DÉTAILLÉS ===== */
+.onboarding-title {
+    font-family: 'Crimson Text', Georgia, serif;
     font-size: 2rem;
-    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--text, #1f2345);
+    text-align: center;
+    margin-bottom: 2rem;
 }
 
-.onboarding-module h3 {
+.onboarding-subtitle {
+    font-size: 1rem;
+    color: var(--text-secondary, #6b7280);
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.onboarding-module-detail {
+    display: flex;
+    gap: 1.25rem;
+    align-items: flex-start;
+    padding: 1.25rem;
+    background: white;
+    border-radius: var(--radius, 1rem);
+    border: 1px solid var(--border, #e9e8f0);
+    margin-bottom: 1rem;
+    transition: all 0.2s;
+}
+
+.onboarding-module-detail:hover {
+    box-shadow: var(--shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.07));
+    border-color: var(--primary, #7b61ff);
+}
+
+.detail-icon-wrapper {
+    flex-shrink: 0;
+    width: 50px;
+    height: 50px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-lg, 0 10px 15px -3px rgba(0, 0, 0, 0.08));
+}
+
+.detail-icon {
+    font-size: 1.5rem;
+}
+
+.detail-content h3 {
     font-family: 'Crimson Text', Georgia, serif;
     font-size: 1.125rem;
     font-weight: 600;
-    margin: 0;
+    color: var(--text, #1f2345);
+    margin-bottom: 0.375rem;
 }
 
-/* Couleurs modules (exactes du dashboard) */
-.onboarding-module.grace {
-    background: linear-gradient(135deg, #fef3c7, #fed7aa);
+.detail-content p {
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--text-secondary, #6b7280);
+}
+
+/* Couleurs des modules détaillés */
+.onboarding-module-detail.grace {
+    background: linear-gradient(135deg, #fffbeb, #fff7ed);
     border-color: #fde68a;
-    color: #78350f;
 }
 
-.onboarding-module.priere {
-    background: linear-gradient(135deg, #e0e7ff, #dbeafe);
+.onboarding-module-detail.priere {
+    background: linear-gradient(135deg, #eef2ff, #dbeafe);
     border-color: #c7d2fe;
-    color: #1e3a8a;
 }
 
-.onboarding-module.ecriture {
-    background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+.onboarding-module-detail.ecriture {
+    background: linear-gradient(135deg, #ecfdf5, #f0fdfa);
     border-color: #a7f3d0;
-    color: #065f46;
 }
 
-.onboarding-module.parole {
-    background: linear-gradient(135deg, #e0f2fe, #cffafe);
+.onboarding-module-detail.parole {
+    background: linear-gradient(135deg, #f0f9ff, #eff6ff);
     border-color: #bae6fd;
-    color: #075985;
 }
 
-.onboarding-module.rencontre {
+.onboarding-module-detail.rencontre {
+    background: linear-gradient(135deg, #e0f2fe, #dbeafe);
+    border-color: #bae6fd;
+}
+
+.onboarding-module-detail.relecture {
+    background: linear-gradient(135deg, #dbeafe, #e0e7ff);
+    border-color: #c7d2fe;
+}
+
+.onboarding-module-detail.fioretti {
     background: linear-gradient(135deg, #fce7f3, #fbcfe8);
     border-color: #f9a8d4;
-    color: #9f1239;
 }
 
-/* ===== SLIDE 3: RELECTURE ===== */
-.onboarding-feature-list {
-    width: 100%;
-    max-width: 500px;
-    margin: 1.5rem 0;
-    text-align: left;
-}
-
-.feature-item {
-    padding: 0.75rem 1rem;
-    margin-bottom: 0.75rem;
-    background: var(--background, #f9f9f9);
-    border-left: 3px solid var(--primary, #7b61ff);
-    border-radius: 0.5rem;
-    color: var(--text, #1f2345);
-    font-size: 0.95rem;
-    line-height: 1.5;
-}
-
+/* ===== QUOTE ===== */
 .onboarding-quote {
-    margin-top: 2rem;
+    margin-top: 1.5rem;
+    text-align: center;
     font-family: 'Crimson Text', Georgia, serif;
     font-style: italic;
-    font-size: 1.125rem;
+    font-size: 1rem;
     color: var(--text-secondary, #6b7280);
 }
 
@@ -215,24 +270,10 @@
     color: var(--text-muted, #9ca3af);
 }
 
-/* ===== SLIDE 4: FIORETTI ===== */
-.onboarding-fioretti-desc {
-    max-width: 500px;
-    text-align: left;
-}
-
-.onboarding-fioretti-desc p {
-    margin-bottom: 1rem;
-    font-size: 0.95rem;
-    line-height: 1.6;
-    color: var(--text, #1f2345);
-}
-
-/* ===== SLIDE 5: PREMIERS PAS ===== */
+/* ===== SLIDE 6: PREMIERS PAS ===== */
 .onboarding-steps {
-    width: 100%;
     max-width: 450px;
-    margin: 2rem 0;
+    margin: 2rem auto;
 }
 
 .step-item {
@@ -243,7 +284,7 @@
     padding: 1rem;
     background: var(--background, #f9f9f9);
     border-radius: var(--radius, 1rem);
-    text-align: left;
+    border: 1px solid var(--border, #e9e8f0);
 }
 
 .step-number {
@@ -270,8 +311,8 @@
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
-    width: 100%;
     max-width: 400px;
+    margin: 0 auto;
 }
 
 .btn-primary {
@@ -289,7 +330,7 @@
 
 .btn-primary:hover {
     background: var(--primary-hover, #6b51ef);
-    transform: translateY(-1px);
+    transform: translateY(-2px);
     box-shadow: var(--shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.07));
 }
 
@@ -409,29 +450,40 @@
 @media (max-width: 768px) {
     .onboarding-modal {
         max-width: 95vw;
-        height: auto;
-        max-height: 90vh;
     }
 
-    .onboarding-slides {
-        padding: 3rem 1.5rem 1.5rem;
+    .onboarding-content {
+        padding: 2.5rem 1.5rem 1.5rem;
     }
 
-    .onboarding-welcome h1 {
+    .onboarding-main-title {
         font-size: 2rem;
     }
 
-    .onboarding-section-title {
+    .onboarding-title {
         font-size: 1.5rem;
     }
 
-    .onboarding-modules-grid {
-        grid-template-columns: 1fr;
-        gap: 0.75rem;
+    .onboarding-mini-modules {
+        gap: 1rem;
     }
 
-    .onboarding-module.full-width {
-        grid-column: 1;
+    .mini-icon-wrapper {
+        width: 40px;
+        height: 40px;
+    }
+
+    .mini-icon {
+        font-size: 1.25rem;
+    }
+
+    .detail-icon-wrapper {
+        width: 40px;
+        height: 40px;
+    }
+
+    .detail-icon {
+        font-size: 1.25rem;
     }
 
     .onboarding-nav {
