@@ -3,16 +3,30 @@ import { sendWelcomeEmail } from '@/app/lib/email';
 
 export async function POST(request: NextRequest) {
     try {
-        const { userEmail, userName } = await request.json();
+        const body = await request.json();
 
-        if (!userEmail || !userName) {
+        // Support both direct format and Supabase webhook format
+        let userEmail: string;
+        let userName: string;
+
+        if (body.record) {
+            // Supabase webhook format
+            userEmail = body.record.email;
+            userName = body.record.raw_user_meta_data?.prenom || body.record.email;
+        } else {
+            // Direct format
+            userEmail = body.userEmail;
+            userName = body.userName;
+        }
+
+        if (!userEmail) {
             return NextResponse.json(
-                { error: 'Missing required fields' },
+                { error: 'Missing email' },
                 { status: 400 }
             );
         }
 
-        const result = await sendWelcomeEmail(userEmail, userName);
+        const result = await sendWelcomeEmail(userEmail, userName || userEmail);
 
         if (result.success) {
             return NextResponse.json({ success: true, messageId: result.messageId });
