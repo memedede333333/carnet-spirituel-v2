@@ -72,21 +72,8 @@ export default function AuthForm({ mode, showResetLink = false }: AuthFormProps)
 
         if (authError) throw authError
 
-        if (authData.user) {
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .insert({
-              id: authData.user.id,
-              email: email,
-              prenom: prenom,
-              nom: nom || null,
-              role: 'user'
-            })
-
-          if (profileError) {
-            console.error('Erreur création profil:', profileError)
-          }
-        }
+        // Le profil est maintenant créé automatiquement par le TRIGGER Supabase (handle_new_user)
+        // L'email de bienvenue sera envoyé par le WEBHOOK Supabase (welcome-email-direct)
 
         setMessage('Inscription réussie ! Vérifiez votre email pour confirmer votre compte.')
       } else {

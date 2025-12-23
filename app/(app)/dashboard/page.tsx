@@ -1,9 +1,40 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import NewFiorettiAlert from '@/app/components/NewFiorettiAlert'
+import OnboardingModal from '@/app/components/OnboardingModal'
+import { supabase } from '@/app/lib/supabase'
 
 export default function DashboardPage() {
+  const [showOnboarding, setShowOnboarding] = useState(false)
+  const [userName, setUserName] = useState('')
+  const [userId, setUserId] = useState('')
+
+  useEffect(() => {
+    checkOnboardingStatus()
+  }, [])
+
+  const checkOnboardingStatus = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('prenom, has_seen_onboarding')
+      .eq('id', user.id)
+      .single()
+
+    if (profile) {
+      setUserName(profile.prenom || 'Ami(e)')
+      setUserId(user.id)
+
+      // Afficher l'onboarding si l'utilisateur ne l'a pas encore vu
+      if (!profile.has_seen_onboarding) {
+        setShowOnboarding(true)
+      }
+    }
+  }
   const modules = [
     {
       href: '/graces',
@@ -63,6 +94,15 @@ export default function DashboardPage() {
 
   return (
     <div className="dashboard-container">
+      {/* Modal d'onboarding pour les nouveaux utilisateurs */}
+      {showOnboarding && (
+        <OnboardingModal
+          userName={userName}
+          userId={userId}
+          onComplete={() => setShowOnboarding(false)}
+        />
+      )}
+
       <div className="dashboard-header fade-in">
         <h1 className="dashboard-title">Carnet de grâces & de missions</h1>
         <p className="dashboard-subtitle">
