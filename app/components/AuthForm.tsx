@@ -612,7 +612,7 @@ export default function AuthForm({ mode, showResetLink = false }: AuthFormProps)
             <div style={{ flex: 1, height: '1px', background: '#e5e7eb' }} />
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem' }}>
+          <div style={{ marginBottom: '1.5rem' }}>
             <button
               type="button"
               onClick={() => {
@@ -673,80 +673,35 @@ export default function AuthForm({ mode, showResetLink = false }: AuthFormProps)
               </svg>
               Google
             </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                supabase.auth.signInWithOAuth({
-                  provider: 'azure',
-                  options: {
-                    redirectTo: `${window.location.origin}/auth/callback`,
-                    scopes: 'email',
-                  },
-                })
-              }}
-              disabled={loading}
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                background: 'white',
-                color: '#374151',
-                border: '1px solid #e5e7eb',
-                borderRadius: '0.5rem',
-                fontSize: '0.95rem',
-                fontWeight: 500,
-                cursor: loading ? 'not-allowed' : 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.75rem',
-                transition: 'all 0.2s'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#f9fafb'
-                e.currentTarget.style.borderColor = '#d1d5db'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'white'
-                e.currentTarget.style.borderColor = '#e5e7eb'
-              }}
-            >
-              <svg width="20" height="20" viewBox="0 0 21 21">
-                <path fill="#f25022" d="M1 1h9v9H1z" />
-                <path fill="#00a4ef" d="M1 11h9v9H1z" />
-                <path fill="#7fba00" d="M11 1h9v9H11z" />
-                <path fill="#ffb900" d="M11 11h9v9H11z" />
-              </svg>
-              Microsoft
-            </button>
           </div>
 
-          <Link
-            href={mode === 'login' ? '/register' : '/login'}
-            style={{
-              display: 'block',
-              width: '100%',
-              padding: '0.75rem',
-              background: 'transparent',
-              color: '#6b7280',
-              border: '1px dashed #d1d5db',
-              borderRadius: '0.5rem',
-              fontSize: '0.875rem',
-              textAlign: 'center',
-              textDecoration: 'none',
-              transition: 'all 0.2s'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = '#0ea5e9'
-              e.currentTarget.style.color = '#0ea5e9'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = '#d1d5db'
-              e.currentTarget.style.color = '#6b7280'
-            }}
-          >
-            {mode === 'login' ? 'Pas encore de compte ? Créer un compte' : 'Déjà un compte ? Se connecter'}
-          </Link>
+          <div style={{
+            textAlign: 'center',
+            marginTop: '1.5rem',
+            paddingTop: '1.5rem',
+            borderTop: '1px solid #f3f4f6'
+          }}>
+            <Link
+              href={mode === 'login' ? '/register' : '/login'}
+              style={{
+                fontSize: '0.875rem',
+                color: '#6b7280',
+                textDecoration: 'none',
+                transition: 'color 0.2s'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = '#0ea5e9'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = '#6b7280'
+              }}
+            >
+              {mode === 'login' ? 'Pas encore de compte ? ' : 'Déjà un compte ? '}
+              <span style={{ color: '#0ea5e9', fontWeight: 500 }}>
+                {mode === 'login' ? 'Créer un compte' : 'Se connecter'}
+              </span>
+            </Link>
+          </div>
 
           {mode === 'login' && (
             <div style={{
