@@ -5,413 +5,168 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Carnet Spirituel - Découvrez l'outil</title>
-    <style>
-        /* Reset */
-        body,
-        table,
-        td,
-        a {
-            -webkit-text-size-adjust: 100%;
-            -ms-text-size-adjust: 100%;
-        }
-
-        table,
-        td {
-            mso-table-lspace: 0pt;
-            mso-table-rspace: 0pt;
-        }
-
-        img {
-            -ms-interpolation-mode: bicubic;
-            border: 0;
-            height: auto;
-            line-height: 100%;
-            outline: none;
-            text-decoration: none;
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-            width: 100% !important;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background-color: #f9f9f9;
-        }
-
-        /* Fonts */
-        @import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap');
-
-        .crimson {
-            font-family: 'Crimson Text', Georgia, serif;
-        }
-
-        .inter {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        }
-
-        /* Container */
-        .email-container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #ffffff;
-        }
-
-        /* Header */
-        .header {
-            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
-            padding: 40px 30px;
-            text-align: center;
-        }
-
-        .logo {
-            width: 60px;
-            height: 60px;
-            margin: 0 auto 20px;
-            background: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 32px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .title {
-            font-family: 'Crimson Text', Georgia, serif;
-            font-size: 32px;
-            font-weight: 600;
-            color: #1f2345;
-            margin: 0 0 10px;
-        }
-
-        .subtitle {
-            font-family: 'Inter', sans-serif;
-            font-size: 16px;
-            color: #6b7280;
-            font-style: italic;
-            margin: 0;
-        }
-
-        /* Content */
-        .content {
-            padding: 40px 30px;
-        }
-
-        .intro {
-            font-family: 'Inter', sans-serif;
-            font-size: 16px;
-            line-height: 1.6;
-            color: #1f2345;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-
-        /* Modules */
-        .module {
-            display: flex;
-            align-items: flex-start;
-            margin-bottom: 20px;
-            padding: 16px;
-            border-radius: 12px;
-            border: 1px solid #e9e8f0;
-        }
-
-        .module-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            margin-right: 16px;
-            flex-shrink: 0;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        }
-
-        .module-content h3 {
-            font-family: 'Crimson Text', Georgia, serif;
-            font-size: 18px;
-            font-weight: 600;
-            color: #1f2345;
-            margin: 0 0 6px;
-        }
-
-        .module-content p {
-            font-family: 'Inter', sans-serif;
-            font-size: 14px;
-            line-height: 1.5;
-            color: #6b7280;
-            margin: 0;
-        }
-
-        /* Module colors */
-        .module-grace {
-            background: linear-gradient(135deg, #fffbeb, #fff7ed);
-            border-color: #fde68a;
-        }
-
-        .module-grace .module-icon {
-            background: linear-gradient(135deg, #fffbeb, #fff7ed);
-        }
-
-        .module-priere {
-            background: linear-gradient(135deg, #eef2ff, #dbeafe);
-            border-color: #c7d2fe;
-        }
-
-        .module-priere .module-icon {
-            background: linear-gradient(135deg, #eef2ff, #dbeafe);
-        }
-
-        .module-ecriture {
-            background: linear-gradient(135deg, #ecfdf5, #f0fdfa);
-            border-color: #a7f3d0;
-        }
-
-        .module-ecriture .module-icon {
-            background: linear-gradient(135deg, #ecfdf5, #f0fdfa);
-        }
-
-        .module-parole {
-            background: linear-gradient(135deg, #f0f9ff, #eff6ff);
-            border-color: #bae6fd;
-        }
-
-        .module-parole .module-icon {
-            background: linear-gradient(135deg, #f0f9ff, #eff6ff);
-        }
-
-        .module-rencontre {
-            background: linear-gradient(135deg, #e0f2fe, #dbeafe);
-            border-color: #bae6fd;
-        }
-
-        .module-rencontre .module-icon {
-            background: linear-gradient(135deg, #e0f2fe, #dbeafe);
-        }
-
-        /* Features */
-        .features {
-            margin: 40px 0;
-            padding: 30px;
-            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
-            border-radius: 12px;
-        }
-
-        .features h2 {
-            font-family: 'Crimson Text', Georgia, serif;
-            font-size: 24px;
-            font-weight: 600;
-            color: #1f2345;
-            margin: 0 0 20px;
-            text-align: center;
-        }
-
-        .feature-item {
-            font-family: 'Inter', sans-serif;
-            font-size: 15px;
-            line-height: 1.6;
-            color: #1f2345;
-            margin-bottom: 12px;
-            padding-left: 30px;
-            position: relative;
-        }
-
-        .feature-item:before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 6px;
-            width: 20px;
-            height: 20px;
-            background: #0284c7;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Quote */
-        .quote {
-            font-family: 'Crimson Text', Georgia, serif;
-            font-size: 18px;
-            font-style: italic;
-            color: #6b7280;
-            text-align: center;
-            margin: 40px 0;
-            padding: 0 20px;
-        }
-
-        .quote-author {
-            font-size: 14px;
-            color: #9ca3af;
-            margin-top: 8px;
-            display: block;
-        }
-
-        /* CTA */
-        .cta {
-            text-align: center;
-            margin: 40px 0;
-        }
-
-        .cta-button {
-            display: inline-block;
-            padding: 16px 40px;
-            background: #0284c7;
-            color: #ffffff !important;
-            text-decoration: none;
-            border-radius: 12px;
-            font-family: 'Inter', sans-serif;
-            font-size: 16px;
-            font-weight: 600;
-            box-shadow: 0 4px 6px rgba(2, 132, 199, 0.3);
-        }
-
-        .cta-button:hover {
-            background: #0369a1;
-        }
-
-        /* Footer */
-        .footer {
-            background: #f9f9f9;
-            padding: 30px;
-            text-align: center;
-            border-top: 1px solid #e9e8f0;
-        }
-
-        .footer p {
-            font-family: 'Inter', sans-serif;
-            font-size: 12px;
-            color: #9ca3af;
-            margin: 5px 0;
-        }
-
-        .footer a {
-            color: #0284c7;
-            text-decoration: none;
-        }
-
-        /* Mobile */
-        @media only screen and (max-width: 600px) {
-            .content {
-                padding: 30px 20px;
-            }
-
-            .header {
-                padding: 30px 20px;
-            }
-
-            .title {
-                font-size: 28px;
-            }
-
-            .module {
-                flex-direction: column;
-            }
-
-            .module-icon {
-                margin: 0 auto 12px;
-            }
-
-            .module-content {
-                text-align: center;
-            }
-        }
-    </style>
 </head>
 
-<body>
+<body
+    style="margin: 0; padding: 0; width: 100% !important; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f9f9f9;">
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
         <tr>
             <td style="padding: 20px 0;">
-                <table role="presentation" class="email-container" cellspacing="0" cellpadding="0" border="0">
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0"
+                    style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
 
                     <!-- Header -->
                     <tr>
-                        <td class="header">
-                            <div class="logo">🕊️</div>
-                            <h1 class="title">Carnet de grâces & de missions</h1>
-                            <p class="subtitle">Contemplez l'action de Dieu dans votre vie</p>
+                        <td
+                            style="background: linear-gradient(135deg, #f0f9ff, #e0f2fe); padding: 40px 30px; text-align: center;">
+                            <div
+                                style="width: 60px; height: 60px; margin: 0 auto 20px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                                🕊️</div>
+                            <h1
+                                style="font-family: 'Crimson Text', Georgia, serif; font-size: 32px; font-weight: 600; color: #1f2345; margin: 0 0 10px;">
+                                Carnet de grâces & de missions</h1>
+                            <p
+                                style="font-family: 'Inter', sans-serif; font-size: 16px; color: #6b7280; font-style: italic; margin: 0;">
+                                Contemplez l'action de Dieu dans votre vie</p>
                         </td>
                     </tr>
 
                     <!-- Content -->
                     <tr>
-                        <td class="content">
+                        <td style="padding: 40px 30px;">
 
                             <!-- Intro -->
-                            <p class="intro">
-                                Cher ami(e) en Christ,<br><br>
+                            <p
+                                style="font-family: 'Inter', sans-serif; font-size: 16px; line-height: 1.6; color: #1f2345; margin-bottom: 30px; text-align: center;">
+                                Chers amis,<br><br>
                                 Nous sommes heureux de vous présenter le <strong>Carnet Spirituel</strong>, un outil
                                 pour discerner et garder mémoire de l'action de Dieu dans votre quotidien.
                             </p>
 
                             <!-- Modules -->
-                            <div class="module module-grace">
-                                <div class="module-icon">✨</div>
-                                <div class="module-content">
-                                    <h3>Grâces reçues</h3>
-                                    <p>Notez les bénédictions, les petits miracles du quotidien et les moments où vous
+                            <!-- Grâce -->
+                            <div
+                                style="display: flex; align-items: flex-start; margin-bottom: 20px; padding: 16px; border-radius: 12px; border: 1px solid #fde68a; background: linear-gradient(135deg, #fffbeb, #fff7ed);">
+                                <div
+                                    style="width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-right: 16px; flex-shrink: 0; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); background: linear-gradient(135deg, #fffbeb, #fff7ed);">
+                                    ✨</div>
+                                <div>
+                                    <h3
+                                        style="font-family: 'Crimson Text', Georgia, serif; font-size: 18px; font-weight: 600; color: #1f2345; margin: 0 0 6px;">
+                                        Grâces reçues</h3>
+                                    <p
+                                        style="font-family: 'Inter', sans-serif; font-size: 14px; line-height: 1.5; color: #6b7280; margin: 0;">
+                                        Notez les bénédictions, les petits miracles du quotidien et les moments où vous
                                         reconnaissez la main de Dieu.</p>
                                 </div>
                             </div>
 
-                            <div class="module module-priere">
-                                <div class="module-icon">🙏</div>
-                                <div class="module-content">
-                                    <h3>Prières</h3>
-                                    <p>Notez pour qui vous priez (guérison, frères, intercession) et suivez les
+                            <!-- Prière -->
+                            <div
+                                style="display: flex; align-items: flex-start; margin-bottom: 20px; padding: 16px; border-radius: 12px; border: 1px solid #c7d2fe; background: linear-gradient(135deg, #eef2ff, #dbeafe);">
+                                <div
+                                    style="width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-right: 16px; flex-shrink: 0; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); background: linear-gradient(135deg, #eef2ff, #dbeafe);">
+                                    🙏</div>
+                                <div>
+                                    <h3
+                                        style="font-family: 'Crimson Text', Georgia, serif; font-size: 18px; font-weight: 600; color: #1f2345; margin: 0 0 6px;">
+                                        Prières</h3>
+                                    <p
+                                        style="font-family: 'Inter', sans-serif; font-size: 14px; line-height: 1.5; color: #6b7280; margin: 0;">
+                                        Notez pour qui vous priez (guérison, frères, intercession) et suivez les
                                         évolutions et réponses de Dieu.</p>
                                 </div>
                             </div>
 
-                            <div class="module module-ecriture">
-                                <div class="module-icon">📖</div>
-                                <div class="module-content">
-                                    <h3>Paroles d'Écriture</h3>
-                                    <p>Gardez les passages bibliques qui vous touchent et méditez la Parole de Dieu.</p>
+                            <!-- Écriture -->
+                            <div
+                                style="display: flex; align-items: flex-start; margin-bottom: 20px; padding: 16px; border-radius: 12px; border: 1px solid #a7f3d0; background: linear-gradient(135deg, #ecfdf5, #f0fdfa);">
+                                <div
+                                    style="width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-right: 16px; flex-shrink: 0; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); background: linear-gradient(135deg, #ecfdf5, #f0fdfa);">
+                                    📖</div>
+                                <div>
+                                    <h3
+                                        style="font-family: 'Crimson Text', Georgia, serif; font-size: 18px; font-weight: 600; color: #1f2345; margin: 0 0 6px;">
+                                        Paroles d'Écriture</h3>
+                                    <p
+                                        style="font-family: 'Inter', sans-serif; font-size: 14px; line-height: 1.5; color: #6b7280; margin: 0;">
+                                        Gardez les passages bibliques qui vous touchent et méditez la Parole de Dieu.
+                                    </p>
                                 </div>
                             </div>
 
-                            <div class="module module-parole">
-                                <div class="module-icon">🕊️</div>
-                                <div class="module-content">
-                                    <h3>Paroles de connaissance</h3>
-                                    <p>Notez les paroles que vous avez données ou reçues dans différents contextes.</p>
+                            <!-- Parole -->
+                            <div
+                                style="display: flex; align-items: flex-start; margin-bottom: 20px; padding: 16px; border-radius: 12px; border: 1px solid #bae6fd; background: linear-gradient(135deg, #f0f9ff, #eff6ff);">
+                                <div
+                                    style="width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-right: 16px; flex-shrink: 0; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); background: linear-gradient(135deg, #f0f9ff, #eff6ff);">
+                                    🕊️</div>
+                                <div>
+                                    <h3
+                                        style="font-family: 'Crimson Text', Georgia, serif; font-size: 18px; font-weight: 600; color: #1f2345; margin: 0 0 6px;">
+                                        Paroles de connaissance</h3>
+                                    <p
+                                        style="font-family: 'Inter', sans-serif; font-size: 14px; line-height: 1.5; color: #6b7280; margin: 0;">
+                                        Notez les paroles que vous avez données ou reçues dans différents contextes.</p>
                                 </div>
                             </div>
 
-                            <div class="module module-rencontre">
-                                <div class="module-icon">🤝</div>
-                                <div class="module-content">
-                                    <h3>Rencontres missionnaires</h3>
-                                    <p>Documentez vos rencontres d'évangélisation et gardez mémoire des rencontres
+                            <!-- Rencontre -->
+                            <div
+                                style="display: flex; align-items: flex-start; margin-bottom: 20px; padding: 16px; border-radius: 12px; border: 1px solid #bae6fd; background: linear-gradient(135deg, #e0f2fe, #dbeafe);">
+                                <div
+                                    style="width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-right: 16px; flex-shrink: 0; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); background: linear-gradient(135deg, #e0f2fe, #dbeafe);">
+                                    🤝</div>
+                                <div>
+                                    <h3
+                                        style="font-family: 'Crimson Text', Georgia, serif; font-size: 18px; font-weight: 600; color: #1f2345; margin: 0 0 6px;">
+                                        Rencontres missionnaires</h3>
+                                    <p
+                                        style="font-family: 'Inter', sans-serif; font-size: 14px; line-height: 1.5; color: #6b7280; margin: 0;">
+                                        Documentez vos rencontres d'évangélisation et gardez mémoire des rencontres
                                         providentielles.</p>
                                 </div>
                             </div>
 
                             <!-- Features -->
-                            <div class="features">
-                                <h2>Et aussi...</h2>
-                                <div class="feature-item">🌿 <strong>La Relecture</strong> : Reliez vos notes pour voir
-                                    le fil rouge de Dieu</div>
-                                <div class="feature-item">🌸 <strong>Le Jardin des Fioretti</strong> : Partagez et
-                                    découvrez les grâces de la communauté</div>
-                                <div class="feature-item">🔗 <strong>Liens spirituels</strong> : Créez des connexions
-                                    entre vos expériences</div>
+                            <div
+                                style="margin: 40px 0; padding: 30px; background: linear-gradient(135deg, #f0f9ff, #e0f2fe); border-radius: 12px;">
+                                <h2
+                                    style="font-family: 'Crimson Text', Georgia, serif; font-size: 24px; font-weight: 600; color: #1f2345; margin: 0 0 20px; text-align: center;">
+                                    Et aussi...</h2>
+                                <div
+                                    style="font-family: 'Inter', sans-serif; font-size: 15px; line-height: 1.6; color: #1f2345; margin-bottom: 12px; padding-left: 30px; position: relative;">
+                                    <span
+                                        style="position: absolute; left: 0; top: 6px; width: 20px; height: 20px; background: #0284c7; border-radius: 50%;"></span>
+                                    🌿 <strong>La Relecture</strong> : Reliez vos notes pour voir le fil rouge de Dieu
+                                </div>
+                                <div
+                                    style="font-family: 'Inter', sans-serif; font-size: 15px; line-height: 1.6; color: #1f2345; margin-bottom: 12px; padding-left: 30px; position: relative;">
+                                    <span
+                                        style="position: absolute; left: 0; top: 6px; width: 20px; height: 20px; background: #0284c7; border-radius: 50%;"></span>
+                                    🌸 <strong>Le Jardin des Fioretti</strong> : Partagez et découvrez les grâces de la
+                                    communauté
+                                </div>
+                                <div
+                                    style="font-family: 'Inter', sans-serif; font-size: 15px; line-height: 1.6; color: #1f2345; margin-bottom: 12px; padding-left: 30px; position: relative;">
+                                    <span
+                                        style="position: absolute; left: 0; top: 6px; width: 20px; height: 20px; background: #0284c7; border-radius: 50%;"></span>
+                                    🔗 <strong>Liens spirituels</strong> : Créez des connexions entre vos expériences
+                                </div>
                             </div>
 
                             <!-- Quote -->
-                            <div class="quote">
+                            <div
+                                style="font-family: 'Crimson Text', Georgia, serif; font-size: 18px; font-style: italic; color: #6b7280; text-align: center; margin: 40px 0; padding: 0 20px;">
                                 « Chercher et trouver Dieu en toutes choses »
-                                <span class="quote-author">— Saint Ignace de Loyola</span>
+                                <span style="font-size: 14px; color: #9ca3af; margin-top: 8px; display: block;">— Saint
+                                    Ignace de Loyola</span>
                             </div>
 
                             <!-- CTA -->
-                            <div class="cta">
-                                <a href="https://carnet-spirituel-v2.vercel.app" class="cta-button">
+                            <div style="text-align: center; margin: 40px 0;">
+                                <a href="https://carnet-spirituel-v2.vercel.app"
+                                    style="display: inline-block; padding: 16px 40px; background: #0284c7; color: #ffffff !important; text-decoration: none; border-radius: 12px; font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600; box-shadow: 0 4px 6px rgba(2, 132, 199, 0.3);">
                                     Commencer mon carnet spirituel →
                                 </a>
                             </div>
@@ -421,9 +176,16 @@
 
                     <!-- Footer -->
                     <tr>
-                        <td class="footer">
-                            <p>Carnet Spirituel - Contempler l'action de Dieu</p>
-                            <p><a href="#">Se désinscrire</a> | <a href="#">Politique de confidentialité</a></p>
+                        <td
+                            style="background: #f9f9f9; padding: 30px; text-align: center; border-top: 1px solid #e9e8f0;">
+                            <p
+                                style="font-family: 'Inter', sans-serif; font-size: 12px; color: #9ca3af; margin: 5px 0;">
+                                Carnet Spirituel - Contempler l'action de Dieu</p>
+                            <p
+                                style="font-family: 'Inter', sans-serif; font-size: 12px; color: #9ca3af; margin: 5px 0;">
+                                <a href="#" style="color: #0284c7; text-decoration: none;">Se désinscrire</a> | <a
+                                    href="#" style="color: #0284c7; text-decoration: none;">Politique de
+                                    confidentialité</a></p>
                         </td>
                     </tr>
 
