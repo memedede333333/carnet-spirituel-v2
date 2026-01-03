@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/app/lib/supabase';
 import { Fioretto } from '@/app/types';
 
@@ -27,6 +27,45 @@ export default function FiorettoCard({ fioretto }: FiorettoCardProps) {
     const content = typeof fioretto.contenu_affiche === 'string'
         ? JSON.parse(fioretto.contenu_affiche)
         : fioretto.contenu_affiche;
+
+    // Vérifier si l'utilisateur actuel a déjà interagi avec ce fioretto
+    useEffect(() => {
+        const checkUserInteractions = async () => {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) return;
+
+                const { data, error } = await supabase
+                    .from('fioretti_interactions')
+                    .select('type_interaction')
+                    .eq('fioretto_id', fioretto.id)
+                    .eq('user_id', user.id);
+
+                if (error) throw error;
+
+                if (data && data.length > 0) {
+                    const interactions = {
+                        soutien: data.some(i => i.type_interaction === 'soutien'),
+                        grace: data.some(i => i.type_interaction === 'action_grace')
+                    };
+                    setHasInteracted(interactions);
+                }
+            } catch (err) {
+                console.error('Error checking interactions:', err);
+            }
+        };
+
+        checkUserInteractions();
+    }, [fioretto.id]);
+
+    // Mettre à jour les compteurs quand les props changent
+    useEffect(() => {
+        setCounts({
+            soutien: fioretto._count?.soutien || 0,
+            grace: fioretto._count?.action_grace || 0
+        });
+    }, [fioretto._count]);
+
 
     const handleInteraction = async (e: React.MouseEvent, type: 'soutien' | 'action_grace') => {
         e.stopPropagation(); // Empêche l'ouverture du fioretto parent
@@ -228,7 +267,7 @@ export default function FiorettoCard({ fioretto }: FiorettoCardProps) {
                         textAlign: 'right',
                         fontStyle: 'italic'
                     }}>
-                        — {fioretto.anonyme ? "Un frère/une sœur" : (fioretto.pseudo || "Un frère/une sœur")}
+                        — {fioretto.anonyme ? "Un frère/une sœur" : (fioretto.pseudo || fioretto.author?.prenom || "Un frère/une sœur")}
                     </p>
                 </div>
             </div>

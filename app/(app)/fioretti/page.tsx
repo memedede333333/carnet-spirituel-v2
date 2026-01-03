@@ -22,6 +22,17 @@ export default function FiorettiPage() {
 
     useEffect(() => {
         fetchFioretti();
+
+        // Écouter les changements d'authentification pour recharger les fioretti
+        const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+                fetchFioretti();
+            }
+        });
+
+        return () => {
+            authListener?.subscription.unsubscribe();
+        };
     }, []);
 
     const fetchFioretti = async () => {
@@ -30,7 +41,8 @@ export default function FiorettiPage() {
                 .from('fioretti')
                 .select(`
           *,
-          interactions:fioretti_interactions(type_interaction)
+          interactions:fioretti_interactions(type_interaction),
+          author:profiles!fioretti_user_id_fkey(prenom)
         `)
                 .eq('statut', 'approuve')
                 .order('date_publication', { ascending: false })
@@ -453,7 +465,7 @@ function FiorettoDetailModal({ fioretto, onClose }: { fioretto: Fioretto; onClos
                         fontStyle: 'italic',
                         marginBottom: '1.5rem'
                     }}>
-                        — {fioretto.anonyme ? "Un frère/une sœur" : (fioretto.pseudo || "Un frère/une sœur")}
+                        — {fioretto.anonyme ? "Un frère/une sœur" : (fioretto.pseudo || fioretto.author?.prenom || "Un frère/une sœur")}
                     </p>
 
                     {/* Note : Les interactions sont déjà gérées dans FiorettoCard */}
