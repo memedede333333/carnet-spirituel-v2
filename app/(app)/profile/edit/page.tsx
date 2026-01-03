@@ -24,7 +24,7 @@ export default function EditProfilePage() {
   const loadProfile = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      
+
       if (!user) {
         router.push('/login')
         return
@@ -37,7 +37,7 @@ export default function EditProfilePage() {
         .single()
 
       if (error) throw error
-      
+
       setProfile(data)
       setPrenom(data.prenom)
       setNom(data.nom || '')
@@ -75,8 +75,27 @@ export default function EditProfilePage() {
 
       if (updateError) throw updateError
 
+      // Logger la modification du profil avec user_id
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        await supabase
+          .from('security_logs')
+          .insert({
+            user_id: user.id,
+            action: 'profile_update',
+            user_agent: navigator.userAgent,
+            details: {
+              fields: ['prenom', 'nom'],
+              old_prenom: profile?.prenom,
+              new_prenom: prenom.trim(),
+              old_nom: profile?.nom || '',
+              new_nom: nom.trim() || null
+            }
+          })
+      }
+
       setMessage('Profil mis à jour avec succès !')
-      
+
       setTimeout(() => {
         router.push('/profile')
       }, 2000)

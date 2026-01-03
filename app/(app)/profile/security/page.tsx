@@ -16,9 +16,7 @@ interface SecurityLog {
 }
 
 const actionLabels: Record<string, { label: string; color: string; icon: any }> = {
-  login: { label: 'Connexion', color: '#10B981', icon: '✅' },
-  logout: { label: 'Déconnexion', color: '#6B7280', icon: '🚪' },
-  password_change: { label: 'Mot de passe modifié', color: '#F59E0B', icon: '🔐' },
+  login: { label: 'Connexion', color: '#10B981', icon: '✅' }, password_change: { label: 'Mot de passe modifié', color: '#F59E0B', icon: '🔐' },
   email_change: { label: 'Email modifié', color: '#F59E0B', icon: '📧' },
   profile_update: { label: 'Profil mis à jour', color: '#3B82F6', icon: '✏️' },
   failed_login: { label: 'Tentative échouée', color: '#EF4444', icon: '⚠️' }
@@ -36,12 +34,23 @@ export default function SecurityPage() {
 
   const loadSecurityLogs = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+      if (userError) {
+        console.error('Auth error:', userError)
+        // Si erreur d'auth (refresh token), rediriger vers login
+        if (userError.message.includes('Refresh Token')) {
+          router.push('/login')
+          return
+        }
+      }
+
       if (!user) {
         router.push('/login')
         return
       }
+
+      console.log('Loading security logs for user:', user.id)
 
       const { data, error } = await supabase
         .from('security_logs')
@@ -50,7 +59,12 @@ export default function SecurityPage() {
         .order('created_at', { ascending: false })
         .limit(100)
 
-      if (error) throw error
+      if (error) {
+        console.error('Error loading security logs:', error)
+        throw error
+      }
+
+      console.log('Security logs loaded:', data?.length || 0)
       setLogs(data || [])
     } catch (error) {
       console.error('Erreur:', error)
@@ -63,31 +77,18 @@ export default function SecurityPage() {
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr)
-    const now = new Date()
-    const diff = now.getTime() - date.getTime()
-    const hours = Math.floor(diff / (1000 * 60 * 60))
-    const days = Math.floor(hours / 24)
-
-    if (hours < 1) {
-      return 'Il y a moins d\'une heure'
-    } else if (hours < 24) {
-      return `Il y a ${hours} heure${hours > 1 ? 's' : ''}`
-    } else if (days < 7) {
-      return `Il y a ${days} jour${days > 1 ? 's' : ''}`
-    } else {
-      return date.toLocaleDateString('fr-FR', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      })
-    }
+    return date.toLocaleDateString('fr-FR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
   }
 
   const getDeviceInfo = (userAgent: string | null) => {
     if (!userAgent) return 'Appareil inconnu'
-    
+
     if (userAgent.includes('Mobile')) return '📱 Mobile'
     if (userAgent.includes('Tablet')) return '📱 Tablette'
     if (userAgent.includes('Windows')) return '💻 Windows'
@@ -265,7 +266,7 @@ export default function SecurityPage() {
           }}>
             {filteredLogs.map((log, index) => {
               const config = actionLabels[log.action] || { label: log.action, color: '#6B7280', icon: '❓' }
-              
+
               return (
                 <div
                   key={log.id}
@@ -290,7 +291,7 @@ export default function SecurityPage() {
                   }}>
                     {config.icon}
                   </div>
-                  
+
                   <div style={{ flex: 1 }}>
                     <div style={{
                       display: 'flex',
@@ -317,7 +318,7 @@ export default function SecurityPage() {
                         </span>
                       )}
                     </div>
-                    
+
                     <div style={{
                       display: 'flex',
                       gap: '1rem',

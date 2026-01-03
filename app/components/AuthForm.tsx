@@ -83,6 +83,22 @@ export default function AuthForm({ mode, showResetLink = false }: AuthFormProps)
         })
 
         if (authError) {
+          // Logger les tentatives échouées
+          await supabase
+            .from('security_logs')
+            .insert({
+              action: 'failed_login',
+              user_agent: navigator.userAgent,
+              details: {
+                email: email,
+                reason: authError.message.includes('Invalid login credentials')
+                  ? 'wrong_password'
+                  : authError.message.includes('Email not confirmed')
+                    ? 'email_not_confirmed'
+                    : 'other'
+              }
+            })
+
           if (authError.message.includes('Invalid login credentials')) {
             throw new Error('Email ou mot de passe incorrect')
           } else if (authError.message.includes('Email not confirmed')) {

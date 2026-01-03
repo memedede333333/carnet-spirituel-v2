@@ -69,6 +69,26 @@ export default function AppLayout({
   }, [pathname])
 
   const handleLogout = async () => {
+    try {
+      // Récupérer l'utilisateur AVANT de se déconnecter
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (user) {
+        // Logger la déconnexion avec le user_id
+        await supabase
+          .from('security_logs')
+          .insert({
+            user_id: user.id,
+            action: 'logout',
+            user_agent: navigator.userAgent,
+            details: {}
+          })
+      }
+    } catch (error) {
+      console.error('Erreur log déconnexion:', error)
+    }
+
+    // Déconnexion quoi qu'il arrive
     await supabase.auth.signOut()
     router.push('/login')
   }
@@ -93,9 +113,10 @@ export default function AppLayout({
     { href: '/mes-fioretti', label: 'Mes Fioretti', emoji: '📝', color: '#D97706' },
     // Section Admin (superadmin uniquement)
     ...(userRole === 'superadmin' ? [
-      { type: 'separator' as const, label: 'Administration' },
-      { href: '/admin/users', label: 'Gestion Utilisateurs', emoji: '👥', color: '#EF4444' },
+      { type: 'separator' as const, label: 'ADMINISTRATION' },
       { href: '/admin/moderation', label: 'Modération', emoji: '🛡️', color: '#F59E0B', hasBadge: true },
+      { href: '/admin/users', label: 'Gestion Utilisateurs', emoji: '👥', color: '#EF4444' },
+      { href: '/admin/security', label: 'Logs de Sécurité', emoji: '🔐', color: '#8B5CF6' },
     ] : []),
     // Section Modération (modérateur uniquement)
     ...(userRole === 'moderateur' ? [
