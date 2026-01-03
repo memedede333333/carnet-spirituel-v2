@@ -28,11 +28,13 @@ interface LogWithUser extends SecurityLog {
 }
 
 const actionLabels: Record<string, { label: string; color: string; icon: string }> = {
-    login: { label: 'Connexion', color: '#10B981', icon: '✅' },    password_change: { label: 'Mot de passe modifié', color: '#F59E0B', icon: '🔐' },
+    login: { label: 'Connexion', color: '#10B981', icon: '✅' },
+    password_change: { label: 'Mot de passe modifié', color: '#F59E0B', icon: '🔐' },
     email_change: { label: 'Email modifié', color: '#F59E0B', icon: '📧' },
     profile_update: { label: 'Profil mis à jour', color: '#3B82F6', icon: '✏️' },
     failed_login: { label: 'Tentative échouée', color: '#EF4444', icon: '⚠️' },
-    account_created: { label: 'Compte créé', color: '#8B5CF6', icon: '🎉' }
+    account_created: { label: 'Compte créé', color: '#8B5CF6', icon: '🎉' },
+    account_deleted: { label: 'Compte supprimé', color: '#DC2626', icon: '🗑️' }
 }
 
 export default function AdminSecurityPage() {
@@ -74,6 +76,7 @@ export default function AdminSecurityPage() {
             const { data, error } = await supabase
                 .from('security_logs')
                 .select('*')
+                .neq('action', 'logout') // Exclure les logs de logout
                 .order('created_at', { ascending: false })
                 .limit(1000)
 
@@ -494,6 +497,11 @@ export default function AdminSecurityPage() {
                                                             } else {
                                                                 return `Email inconnu: ${attemptedEmail || 'N/A'} - Tentative suspecte`
                                                             }
+                                                        } else if (log.action === 'account_deleted') {
+                                                            const deletedName = log.details?.deleted_user_name || 'Utilisateur'
+                                                            const deletedEmail = log.details?.deleted_user_email || 'N/A'
+                                                            const deletedBy = log.details?.deleted_by_admin || 'Admin'
+                                                            return `${deletedName} (${deletedEmail}) - Supprimé par ${deletedBy}`
                                                         } else {
                                                             return `${user?.prenom} ${user?.nom} (${user?.email})`
                                                         }

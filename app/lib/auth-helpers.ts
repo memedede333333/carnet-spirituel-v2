@@ -19,6 +19,7 @@ export interface UserProfile {
     prenom: string;
     nom?: string;
     role: UserRole;
+    emailConfirmed?: boolean;
 }
 
 /**
@@ -131,7 +132,19 @@ export async function getAllUsers(): Promise<UserProfile[] | null> {
             return null;
         }
 
-        return data as UserProfile[];
+        // Enrichir avec les données auth (statut confirmation email)
+        // On récupère tous les utilisateurs auth pour comparer
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+
+        // Pour récupérer le statut de confirmation, on doit utiliser l'admin API
+        // Mais comme on est côté client, on va faire une approximation :
+        // Si l'utilisateur peut se connecter, son email est confirmé
+        // On va plutôt enrichir ça dans la page admin via une API route
+
+        return data.map(profile => ({
+            ...profile,
+            emailConfirmed: undefined // Sera enrichi côté serveur
+        })) as UserProfile[];
     } catch (error) {
         console.error('Error in getAllUsers:', error);
         return null;

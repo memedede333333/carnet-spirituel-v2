@@ -864,3 +864,186 @@ export async function sendWelcomeEmail(
     html,
   });
 }
+
+/**
+ * Email de notification de suppression de compte
+ */
+export async function sendAccountDeletionEmail(
+  userEmail: string,
+  userName: string
+) {
+  const html = `
+    <!DOCTYPE html>
+    <html lang="fr">
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+      <style>
+        body { 
+          font-family: 'Inter', -apple-system, sans-serif; 
+          line-height: 1.6; 
+          color: #1f2345; 
+          background: #f9f9f9;
+          margin: 0;
+          padding: 20px;
+        }
+        .container { 
+          max-width: 560px; 
+          margin: 0 auto; 
+          background: white;
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .header { 
+          background: #64748B; 
+          color: white; 
+          padding: 24px 32px; 
+          text-align: center; 
+        }
+        .header h1 {
+          font-family: 'Crimson Text', Georgia, serif;
+          font-size: 1.5rem;
+          font-weight: 600;
+          margin: 0;
+        }
+        .content { 
+          padding: 32px; 
+        }
+        .greeting {
+          font-size: 0.95rem;
+          color: #6b7280;
+          margin-bottom: 16px;
+        }
+        .message {
+          font-size: 1rem;
+          color: #1f2345;
+          margin-bottom: 24px;
+          line-height: 1.5;
+        }
+        
+        .info-box { 
+          background: #f8fafc; 
+          padding: 20px; 
+          margin: 20px 0; 
+          border-radius: 8px; 
+          border-left: 4px solid #64748B; 
+        }
+        .info-box h3 {
+          font-family: 'Crimson Text', Georgia, serif;
+          font-size: 1.1rem;
+          font-weight: 600;
+          color: #334155;
+          margin: 0 0 12px 0;
+        }
+        .info-box ul {
+          margin: 0;
+          padding-left: 20px;
+        }
+        .info-box li {
+          margin: 8px 0;
+          font-size: 0.9rem;
+          color: #475569;
+        }
+        
+        .quote-box {
+          background: linear-gradient(135deg, #F1F5F9, #F8FAFC);
+          border-radius: 8px;
+          padding: 20px;
+          margin: 24px 0;
+          text-align: center;
+          border: 1px solid #CBD5E1;
+        }
+        .quote-box p {
+          font-family: 'Crimson Text', Georgia, serif;
+          font-style: italic;
+          font-size: 1.05rem;
+          color: #334155;
+          margin: 0 0 8px 0;
+          line-height: 1.6;
+        }
+        .quote-box .ref {
+          font-weight: 600;
+          font-size: 0.9rem;
+          color: #64748B;
+        }
+        
+        .footer { 
+          text-align: center; 
+          padding: 24px; 
+          background: #fafafa;
+          border-top: 1px solid #e9e8f0;
+          font-size: 0.85rem;
+          color: #9ca3af;
+        }
+        .footer a {
+          color: #6b7280;
+          text-decoration: none;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>🕊️ Votre compte a été supprimé</h1>
+        </div>
+        
+        <div class="content">
+          <p class="greeting">Bonjour ${userName},</p>
+          <p class="message">
+            Nous vous confirmons que votre compte sur <strong>Carnet Spirituel</strong> a été supprimé par notre équipe d'administration.
+          </p>
+          
+          <div class="info-box">
+            <h3>📦 Données supprimées</h3>
+            <p style="margin: 0 0 12px 0; font-size: 0.9rem; color: #475569;">
+              Toutes vos données personnelles ont été définitivement effacées de notre système :
+            </p>
+            <ul>
+              <li>✨ Vos grâces reçues</li>
+              <li>🙏 Vos prières</li>
+              <li>📖 Vos écritures</li>
+              <li>🕊️ Vos paroles</li>
+              <li>🤝 Vos rencontres missionnaires</li>
+              <li>🌸 Vos Fioretti partagés</li>
+              <li>🔒 Votre historique de sécurité</li>
+            </ul>
+          </div>
+          
+          <p class="message">
+            Cette suppression est <strong>définitive et irréversible</strong>. 
+          Nous ne conservons aucune copie de vos données.
+          </p>
+          
+          <div class="quote-box">
+            <p style="color: #1E293B; font-weight: 500;">« Le Seigneur est proche de ceux qui ont le cœur brisé, il sauve ceux qui ont l'esprit abattu. »</p>
+            <div class="ref" style="color: #475569;">Psaume 34, 19</div>
+          </div>
+          
+          <p class="message">
+            Si cette suppression a été effectuée par erreur ou si vous souhaitez revenir parmi nous, 
+            vous êtes toujours le bienvenu pour créer un nouveau compte.
+          </p>
+          
+          <p style="font-size: 0.9rem; color: #6b7280; margin-top: 32px;">
+            Que le Seigneur vous accompagne dans votre chemin spirituel. 🙏
+          </p>
+        </div>
+        
+        <div class="footer">
+          <strong>Carnet Spirituel</strong> · Cultivez la présence de Dieu dans vos vies
+          <br>
+          <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/charte">Charte du site</a>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  return sendEmail({
+    to: userEmail,
+    subject: 'Confirmation de suppression de votre compte - Carnet Spirituel',
+    html,
+  });
+}

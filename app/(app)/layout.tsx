@@ -69,26 +69,6 @@ export default function AppLayout({
   }, [pathname])
 
   const handleLogout = async () => {
-    try {
-      // Récupérer l'utilisateur AVANT de se déconnecter
-      const { data: { user } } = await supabase.auth.getUser()
-
-      if (user) {
-        // Logger la déconnexion avec le user_id
-        await supabase
-          .from('security_logs')
-          .insert({
-            user_id: user.id,
-            action: 'logout',
-            user_agent: navigator.userAgent,
-            details: {}
-          })
-      }
-    } catch (error) {
-      console.error('Erreur log déconnexion:', error)
-    }
-
-    // Déconnexion quoi qu'il arrive
     await supabase.auth.signOut()
     router.push('/login')
   }

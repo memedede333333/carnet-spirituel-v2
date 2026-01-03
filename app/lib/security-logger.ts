@@ -17,27 +17,48 @@ async function getClientIP(): Promise<string | null> {
 }
 
 export async function logSecurityAction(
-  action: 'login' | 'logout' | 'password_change' | 'email_change' | 'profile_update' | 'failed_login' | 'account_created',
-  details?: any
+  action: 'login' | 'logout' | 'password_change' | 'email_change' | 'profile_update' | 'failed_login' | 'account_created' | 'account_deleted',
+  details?: any,
+  explicitUserId?: string
 ) {
   try {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+    let userId = explicitUserId
+
+    // Si pas d'ID explicite, on essaie de récupérer l'utilisateur connecté
+    if (!userId) {
+      const { data: { user } } = await supabase.auth.getUser()
+      userId = user?.id
+    }
+
+    // Si toujours pas d'utilisateur et que ce n'est pas un failed_login (qui est anonyme), on annule
+    if (!userId && action !== 'failed_login') return
 
     // Récupérer l'IP et le user agent côté client
     const userAgent = typeof window !== 'undefined' ? window.navigator.userAgent : null
     const ipAddress = await getClientIP()
 
-    await supabase
+    const { data, error: insertError } = await supabase
       .from('security_logs')
       .insert({
-        user_id: user.id,
+        user_id: userId || null, // null pour failed_login
         action,
         ip_address: ipAddress,
         user_agent: userAgent,
         details: details || {}
       })
+
+    if (insertError) {
+      console.error('❌ ERREUR LOG SÉCURITÉ:', {
+        action,
+        userId,
+        error: insertError,
+        message: insertError.message,
+        code: insertError.code
+      })
+    } else {
+      console.log('✅ Log sécurité enregistré:', action, userId)
+    }
   } catch (error) {
-    console.error('Erreur lors du log de sécurité:', error)
+    console.error('❌ EXCEPTION log de sécurité:', error)
   }
 }

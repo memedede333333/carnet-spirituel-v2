@@ -2,8 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ShieldCheck, Users, Search, Loader2, Crown, Shield, User as UserIcon } from 'lucide-react';
+import { ShieldCheck, Users, Search, Loader2, Crown, Shield, User as UserIcon, Trash2 } from 'lucide-react';
 import { getAllUsers, isAdmin, UserProfile, updateUserRole, UserRole } from '@/app/lib/auth-helpers';
+import { supabase } from '@/app/lib/supabase';
+import DeleteWarningModal from './DeleteWarningModal';
+import ConfirmDeleteModal from './ConfirmDeleteModal';
+import { generateConfirmationCode, deleteUser } from './deleteUserUtils';
 
 const ROLE_CONFIG = {
     user: {
@@ -43,6 +47,12 @@ export default function UsersManagementPage() {
     const itemsPerPage = 30;
     const router = useRouter();
 
+    // États pour la suppression
+    const [userToDelete, setUserToDelete] = useState<UserProfile | null>(null);
+    const [showDeleteWarning, setShowDeleteWarning] = useState(false);
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [confirmationCode, setConfirmationCode] = useState('');
+
     useEffect(() => {
         checkAdminAndLoadUsers();
     }, []);
@@ -57,7 +67,33 @@ export default function UsersManagementPage() {
 
             const usersData = await getAllUsers();
             if (usersData) {
-                setUsers(usersData);
+                // Enrichir avec le statut de confirmation email
+                try {
+                    const { data: { user: currentUser } } = await supabase.auth.getUser();
+                    if (currentUser) {
+                        const response = await fetch('/api/admin/users-email-status', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ currentUserId: currentUser.id })
+                        });
+
+                        if (response.ok) {
+                            const { emailStatusMap } = await response.json();
+                            const enrichedUsers = usersData.map(user => ({
+                                ...user,
+                                emailConfirmed: emailStatusMap[user.id] ?? undefined
+                            }));
+                            setUsers(enrichedUsers);
+                        } else {
+                            setUsers(usersData);
+                        }
+                    } else {
+                        setUsers(usersData);
+                    }
+                } catch (err) {
+                    console.error('Erreur enrichissement email status:', err);
+                    setUsers(usersData);
+                }
             }
         } catch (error) {
             console.error('Error loading users:', error);
@@ -83,6 +119,40 @@ export default function UsersManagementPage() {
             setUpdatingRole(false);
         }
     };
+
+    // Gestion de la suppression d'utilisateur
+    const handleDeleteClick = (user: UserProfile) => {
+        setUserToDelete(user);
+        setShowDeleteWarning(true);
+    };
+
+    const handleContinueToConfirm = () => {
+        setShowDeleteWarning(false);
+        setConfirmationCode(generateConfirmationCode());
+        setShowConfirmModal(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!userToDelete) return;
+
+        const result = await deleteUser(userToDelete.id);
+
+        if (result.success) {
+            alert(result.message);
+            setShowConfirmModal(false);
+            setUserToDelete(null);
+            await checkAdminAndLoadUsers();
+        } else {
+            alert('Erreur : ' + result.message);
+        }
+    };
+
+    const handleCancelDelete = () => {
+        setShowDeleteWarning(false);
+        setShowConfirmModal(false);
+        setUserToDelete(null);
+    };
+
 
     // Filtrage des utilisateurs
     const filteredUsers = users.filter(user => {
@@ -294,6 +364,7 @@ export default function UsersManagementPage() {
                                     onCancel={() => setEditingUserId(null)}
                                     onRoleChange={(newRole) => handleRoleChange(user.id, newRole)}
                                     isUpdating={updatingRole}
+                                    onDelete={handleDeleteClick}
                                 />
                             ))}
                         </div>
@@ -393,6 +464,24 @@ export default function UsersManagementPage() {
                 )}
             </div>
 
+            {/* Modals de suppression */}
+            {showDeleteWarning && userToDelete && (
+                <DeleteWarningModal
+                    user={userToDelete}
+                    onCancel={handleCancelDelete}
+                    onContinue={handleContinueToConfirm}
+                />
+            )}
+
+            {showConfirmModal && userToDelete && (
+                <ConfirmDeleteModal
+                    user={userToDelete}
+                    confirmationCode={confirmationCode}
+                    onCancel={handleCancelDelete}
+                    onConfirm={handleConfirmDelete}
+                />
+            )}
+
             <style jsx global>{`
         @keyframes spin {
           from { transform: rotate(0deg); }
@@ -441,7 +530,8 @@ function UserCard({
     onEdit,
     onCancel,
     onRoleChange,
-    isUpdating
+    isUpdating,
+    onDelete
 }: {
     user: UserProfile;
     isEditing: boolean;
@@ -449,6 +539,7 @@ function UserCard({
     onCancel: () => void;
     onRoleChange: (role: UserRole) => void;
     isUpdating: boolean;
+    onDelete: (user: UserProfile) => void;
 }) {
     const config = ROLE_CONFIG[user.role];
 
@@ -481,12 +572,35 @@ function UserCard({
                         }}>
                             {user.prenom} {user.nom || ''}
                         </p>
-                        <p style={{
-                            fontSize: '0.75rem',
-                            color: '#64748B'
-                        }}>
-                            {user.email}
-                        </p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <p style={{
+                                fontSize: '0.75rem',
+                                color: '#64748B',
+                                margin: 0
+                            }}>
+                                {user.email}
+                            </p>
+                            {user.emailConfirmed === false && (
+                                <span
+                                    style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '0.25rem',
+                                        padding: '0.125rem 0.5rem',
+                                        background: '#FEF3C7',
+                                        border: '1px solid #FCD34D',
+                                        borderRadius: '9999px',
+                                        fontSize: '0.625rem',
+                                        fontWeight: '600',
+                                        color: '#92400E',
+                                        whiteSpace: 'nowrap'
+                                    }}
+                                    title="L'utilisateur n'a pas encore confirmé son adresse email"
+                                >
+                                    ⚠️ Email non confirmé
+                                </span>
+                            )}
+                        </div>
                     </div>
                 </div>
                 <div style={{
@@ -509,31 +623,58 @@ function UserCard({
             {/* Content */}
             <div style={{ padding: '1.25rem' }}>
                 {!isEditing ? (
-                    <button
-                        onClick={onEdit}
-                        style={{
-                            width: '100%',
-                            padding: '0.75rem',
-                            background: 'white',
-                            border: '2px solid #E2E8F0',
-                            borderRadius: '0.5rem',
-                            fontSize: '0.875rem',
-                            fontWeight: '500',
-                            color: '#475569',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s'
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.borderColor = '#3B82F6';
-                            e.currentTarget.style.background = '#F8FAFC';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.borderColor = '#E2E8F0';
-                            e.currentTarget.style.background = 'white';
-                        }}
-                    >
-                        Modifier le rôle
-                    </button>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button
+                            onClick={onEdit}
+                            style={{
+                                flex: 1,
+                                padding: '0.75rem',
+                                background: 'white',
+                                border: '2px solid #E2E8F0',
+                                borderRadius: '0.5rem',
+                                fontSize: '0.875rem',
+                                fontWeight: '500',
+                                color: '#475569',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.borderColor = '#3B82F6';
+                                e.currentTarget.style.background = '#F8FAFC';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.borderColor = '#E2E8F0';
+                                e.currentTarget.style.background = 'white';
+                            }}
+                        >
+                            Modifier le rôle
+                        </button>
+                        <button
+                            onClick={() => onDelete(user)}
+                            style={{
+                                padding: '0.625rem',
+                                background: '#FEF2F2',
+                                border: '1px solid #FECACA',
+                                borderRadius: '0.375rem',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.background = '#FEE2E2';
+                                e.currentTarget.style.borderColor = '#EF4444';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.background = '#FEF2F2';
+                                e.currentTarget.style.borderColor = '#FECACA';
+                            }}
+                            title={`Supprimer ${user.prenom} ${user.nom}`}
+                        >
+                            <Trash2 size={16} color="#DC2626" />
+                        </button>
+                    </div>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                         {Object.entries(ROLE_CONFIG).map(([roleKey, roleConfig]) => (

@@ -75,6 +75,15 @@ export default function AuthForm({ mode, showResetLink = false }: AuthFormProps)
         // Le profil est maintenant créé automatiquement par le TRIGGER Supabase (handle_new_user)
         // L'email de bienvenue sera envoyé par le WEBHOOK Supabase (welcome-email-direct)
 
+        // Logger la création du compte avec l'ID utilisateur
+        if (authData.user) {
+          await logSecurityAction('account_created', {
+            email,
+            prenom,
+            nom
+          }, authData.user.id)
+        }
+
         setMessage('Inscription réussie ! Vérifiez votre email pour confirmer votre compte.')
       } else {
         const { data, error: authError } = await supabase.auth.signInWithPassword({
@@ -84,20 +93,15 @@ export default function AuthForm({ mode, showResetLink = false }: AuthFormProps)
 
         if (authError) {
           // Logger les tentatives échouées
-          await supabase
-            .from('security_logs')
-            .insert({
-              action: 'failed_login',
-              user_agent: navigator.userAgent,
-              details: {
-                email: email,
-                reason: authError.message.includes('Invalid login credentials')
-                  ? 'wrong_password'
-                  : authError.message.includes('Email not confirmed')
-                    ? 'email_not_confirmed'
-                    : 'other'
-              }
-            })
+          // Logger les tentatives échouées via le helper (capture l'IP)
+          await logSecurityAction('failed_login', {
+            email: email,
+            reason: authError.message.includes('Invalid login credentials')
+              ? 'wrong_password'
+              : authError.message.includes('Email not confirmed')
+                ? 'email_not_confirmed'
+                : 'other'
+          })
 
           if (authError.message.includes('Invalid login credentials')) {
             throw new Error('Email ou mot de passe incorrect')
