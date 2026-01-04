@@ -1,5 +1,6 @@
 
 import * as cheerio from 'cheerio';
+import { BOOK_MAPPING, AELF_BOOKS_LIST } from './aelf-mapping-table';
 
 export interface BibleVerse {
     ref: string;
@@ -14,90 +15,48 @@ export interface BibleChapter {
     sourceUrl: string;
 }
 
-// Mapping des abréviations courantes vers les slugs AELF (respectant la casse)
-const BOOK_MAPPING: Record<string, string> = {
-    // Ancien Testament
-    'gn': 'Gn', 'gen': 'Gn', 'genese': 'Gn', 'genèse': 'Gn',
-    'ex': 'Ex', 'exode': 'Ex',
-    'lv': 'Lv', 'lev': 'Lv', 'levitique': 'Lv', 'lévitique': 'Lv',
-    'nb': 'Nb', 'nombres': 'Nb',
-    'dt': 'Dt', 'deut': 'Dt', 'deuteronome': 'Dt', 'deutéronome': 'Dt',
-    'jos': 'Jos', 'josue': 'Jos', 'josué': 'Jos',
-    'jg': 'Jg', 'juges': 'Jg',
-    'rt': 'Rt', 'ruth': 'Rt',
-    '1s': '1S', '1sam': '1S', '1_samuel': '1S', '1samuel': '1S',
-    '2s': '2S', '2sam': '2S', '2_samuel': '2S', '2samuel': '2S',
-    '1r': '1R', '1rois': '1R', '1_rois': '1R',
-    '2r': '2R', '2rois': '2R', '2_rois': '2R',
-    '1ch': '1Ch', '1chron': '1Ch', '1_chroniques': '1Ch', '1chroniques': '1Ch',
-    '2ch': '2Ch', '2chron': '2Ch', '2_chroniques': '2Ch', '2chroniques': '2Ch',
-    'esd': 'Esd', 'esdras': 'Esd',
-    'ne': 'Ne', 'neh': 'Ne', 'nehemie': 'Ne', 'néhémie': 'Ne',
-    'tb': 'Tb', 'tob': 'Tb', 'tobie': 'Tb',
-    'jdt': 'Jdt', 'judith': 'Jdt',
-    'est': 'Est', 'esther': 'Est',
-    '1m': '1M', '1mac': '1M', '1_maccabees': '1M', '1maccabees': '1M', '1maccabées': '1M', '1macchabées': '1M',
-    '2m': '2M', '2mac': '2M', '2_maccabees': '2M', '2maccabees': '2M', '2maccabées': '2M', '2macchabées': '2M',
-    'jb': 'Jb', 'job': 'Jb',
-    'ps': 'Ps', 'psaume': 'Ps', 'psaumes': 'Ps',
-    'pr': 'Pr', 'prov': 'Pr', 'proverbes': 'Pr',
-    'qo': 'Qo', 'eccl': 'Qo', 'qohleth': 'Qo', 'ecclesiaste': 'Qo', 'ecclés': 'Qo', 'ecclésiaste': 'Qo',
-    'ct': 'Ct', 'cant': 'Ct', 'cantique': 'Ct', 'cantiques': 'Ct',
-    'sg': 'Sg', 'sag': 'Sg', 'sagesse': 'Sg',
-    'si': 'Si', 'sir': 'Si', 'ecclesiastique': 'Si', 'siracide': 'Si', 'ecclésiastique': 'Si',
-    'is': 'Is', 'isaie': 'Is', 'isaïe': 'Is', 'isa': 'Is',
-    'jr': 'Jr', 'jer': 'Jr', 'jeremie': 'Jr', 'jérémie': 'Jr',
-    'lm': 'Lm', 'lam': 'Lm', 'lamentations': 'Lm',
-    'ba': 'Ba', 'bar': 'Ba', 'baruch': 'Ba',
-    'ez': 'Ez', 'ezek': 'Ez', 'ezechiel': 'Ez', 'ézéchiel': 'Ez', 'ezéchiel': 'Ez',
-    'dn': 'Dn', 'dan': 'Dn', 'daniel': 'Dn',
-    'os': 'Os', 'osee': 'Os', 'osée': 'Os',
-    'jl': 'Jl', 'joel': 'Jl', 'joël': 'Jl',
-    'am': 'Am', 'amos': 'Am',
-    'ab': 'Ab', 'abd': 'Ab', 'abdias': 'Ab',
-    'jon': 'Jon', 'jonas': 'Jon',
-    'mi': 'Mi', 'mich': 'Mi', 'michee': 'Mi', 'michée': 'Mi',
-    'na': 'Na', 'nah': 'Na', 'nahoum': 'Na',
-    'ha': 'Ha', 'hab': 'Ha', 'habaquq': 'Ha', 'habacuc': 'Ha',
-    'so': 'So', 'soph': 'So', 'sophonie': 'So',
-    'ag': 'Ag', 'agg': 'Ag', 'aggee': 'Ag', 'aggée': 'Ag',
-    'za': 'Za', 'zach': 'Za', 'zacharie': 'Za',
-    'ml': 'Ml', 'mal': 'Ml', 'malachie': 'Ml',
-
-    // Nouveau Testament
-    'mt': 'Mt', 'mat': 'Mt', 'matthieu': 'Mt', 'matth': 'Mt',
-    'mc': 'Mc', 'marc': 'Mc', 'mar': 'Mc',
-    'lc': 'Lc', 'luc': 'Lc',
-    'jn': 'Jn', 'jean': 'Jn',
-    'ac': 'Ac', 'act': 'Ac', 'actes': 'Ac',
-    'rm': 'Rm', 'rom': 'Rm', 'romains': 'Rm',
-    '1co': '1Co', '1cor': '1Co', '1_corinthiens': '1Co', '1corinthiens': '1Co',
-    '2co': '2Co', '2cor': '2Co', '2_corinthiens': '2Co', '2corinthiens': '2Co',
-    'ga': 'Ga', 'gal': 'Ga', 'galates': 'Ga',
-    'ep': 'Ep', 'eph': 'Ep', 'ephesiens': 'Ep', 'éphésiens': 'Ep',
-    'ph': 'Ph', 'phil': 'Ph', 'philippiens': 'Ph',
-    'col': 'Col', 'colossiens': 'Col',
-    '1th': '1Th', '1thes': '1Th', '1_thessaloniciens': '1Th', '1thessaloniciens': '1Th',
-    '2th': '2Th', '2thes': '2Th', '2_thessaloniciens': '2Th', '2thessaloniciens': '2Th',
-    '1tm': '1Tm', '1tim': '1Tm', '1_timothee': '1Tm', '1timothée': '1Tm', '1timothee': '1Tm',
-    '2tm': '2Tm', '2tim': '2Tm', '2_timothee': '2Tm', '2timothée': '2Tm', '2timothee': '2Tm',
-    'tt': 'Tt', 'tit': 'Tt', 'tite': 'Tt',
-    'phm': 'Phm', 'philem': 'Phm', 'philemon': 'Phm', 'philémon': 'Phm',
-    'he': 'He', 'heb': 'He', 'hebreux': 'He', 'hébreux': 'He',
-    'jc': 'Jc', 'jac': 'Jc', 'jacques': 'Jc',
-    '1p': '1P', '1pier': '1P', '1_pierre': '1P', '1pierre': '1P',
-    '2p': '2P', '2pier': '2P', '2_pierre': '2P', '2pierre': '2P',
-    '1jn': '1Jn', '1_jean': '1Jn', '1jean': '1Jn',
-    '2jn': '2Jn', '2_jean': '2Jn', '2jean': '2Jn',
-    '3jn': '3Jn', '3_jean': '3Jn', '3jean': '3Jn',
-    'jud': 'Jude', 'jude': 'Jude',
-    'ap': 'Ap', 'apoc': 'Ap', 'apocalypse': 'Ap'
-};
-
-function normalizeBook(input: string): string | null {
-    const cleanInput = input.toLowerCase().replace(/[^a-z0-9]/g, '');
-    return BOOK_MAPPING[cleanInput] || null;
+/**
+ * Supprime les accents d'une chaîne
+ */
+function removeAccents(str: string): string {
+    return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
+
+/**
+ * Normalise une entrée de livre vers son code AELF
+ */
+function normalizeBook(input: string): string | null {
+    // Nettoyer et normaliser l'entrée
+    const cleanInput = removeAccents(input.toLowerCase().trim());
+
+    // Recherche directe dans le mapping
+    if (BOOK_MAPPING[cleanInput]) {
+        return BOOK_MAPPING[cleanInput];
+    }
+
+    // Recherche sans accents ni espaces
+    const compactInput = cleanInput.replace(/[^a-z0-9]/g, '');
+
+    for (const [key, code] of Object.entries(BOOK_MAPPING)) {
+        const normalizedKey = removeAccents(key).replace(/[^a-z0-9]/g, '');
+        if (normalizedKey === compactInput) {
+            return code;
+        }
+    }
+
+    // Recherche dans les codes des livres directement
+    const upperInput = input.toUpperCase().trim();
+    const book = AELF_BOOKS_LIST.find(b =>
+        b.code.toUpperCase() === upperInput ||
+        b.code.toUpperCase() === compactInput.toUpperCase()
+    );
+    if (book) {
+        return book.code;
+    }
+
+    return null;
+}
+
 
 export async function fetchAelfChapter(reference: string): Promise<BibleChapter> {
     // Parsing simple de la référence (ex: "Mt 5" ou "Jean 3")

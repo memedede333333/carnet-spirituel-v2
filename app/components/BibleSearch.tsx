@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Search, Loader2, Check, BookOpen } from 'lucide-react'
+import { Search, Loader2, Check, BookOpen, AlertCircle } from 'lucide-react'
+import { parseBibleReference, ParseResult, BookSuggestion, validateChapter } from '@/app/lib/bible-parser'
 
 interface BibleVerse {
     ref: string
@@ -28,16 +29,69 @@ export default function BibleSearch({ onImport, onCancel }: BibleSearchProps) {
     const [result, setResult] = useState<BibleChapter | null>(null)
     const [selectedVerses, setSelectedVerses] = useState<number[]>([])
 
-    const handleSearch = async (e: React.FormEvent) => {
-        e.preventDefault()
+    // Nouveau: état pour les suggestions
+    const [suggestions, setSuggestions] = useState<BookSuggestion[]>([])
+    const [pendingChapter, setPendingChapter] = useState<number | null>(null)
+
+    // Recherche via le parser intelligent
+    const handleSearch = async (e?: React.FormEvent) => {
+        e?.preventDefault()
         if (!query.trim()) return
 
+        setError('')
+        setSuggestions([])
+        setPendingChapter(null)
+
+        // Étape 1: Parser la référence
+        const parseResult = parseBibleReference(query)
+
+        if (!parseResult.success) {
+            // Si suggestions disponibles
+            if (parseResult.suggestions && parseResult.suggestions.length > 0) {
+                // Extraire le chapitre de la requête
+                const chapterMatch = query.match(/(\d+)\s*$/)
+                const chapter = chapterMatch ? parseInt(chapterMatch[1], 10) : null
+
+                setSuggestions(parseResult.suggestions)
+                setPendingChapter(chapter)
+                setError(parseResult.error || 'Précisez votre recherche')
+                return
+            }
+
+            // Erreur simple (livre inconnu, chapitre manquant...)
+            setError(parseResult.error || 'Référence non reconnue')
+            return
+        }
+
+        // Recherche réussie, lancer le fetch
+        await fetchChapter(parseResult.bookCode!, parseResult.chapter!)
+    }
+
+    // Sélection d'une suggestion
+    const handleSelectSuggestion = async (suggestion: BookSuggestion) => {
+        const chapter = pendingChapter || 1
+
+        // Valider que le chapitre existe
+        const validation = validateChapter(suggestion.code, chapter)
+        if (!validation.valid) {
+            setError(validation.error || 'Chapitre invalide')
+            return
+        }
+
+        setSuggestions([])
+        setPendingChapter(null)
+
+        await fetchChapter(suggestion.code, chapter)
+    }
+
+    // Fetch le chapitre depuis l'API
+    const fetchChapter = async (bookCode: string, chapter: number) => {
         setLoading(true)
         setError('')
         setResult(null)
 
         try {
-            const response = await fetch(`/api/bible?ref=${encodeURIComponent(query)}`)
+            const response = await fetch(`/api/bible?ref=${bookCode} ${chapter}`)
             const data = await response.json()
 
             if (!response.ok) {
@@ -138,7 +192,7 @@ export default function BibleSearch({ onImport, onCancel }: BibleSearchProps) {
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleSearch(e)}
-                            placeholder="Ex: Mt 5, Jean 3, Ps 23..."
+                            placeholder="Ex: Mt 5, Jean 3, 1 timothée 5, ezekiel 2..."
                             style={{
                                 flex: 1,
                                 padding: '0.75rem',
@@ -165,7 +219,10 @@ export default function BibleSearch({ onImport, onCancel }: BibleSearchProps) {
                                 fontWeight: '600',
                                 cursor: loading ? 'not-allowed' : 'pointer',
                                 transition: 'all 0.2s',
-                                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+                                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem'
                             }}
                             onMouseEnter={(e) => {
                                 if (!loading) e.currentTarget.style.background = '#34D399'
@@ -179,7 +236,60 @@ export default function BibleSearch({ onImport, onCancel }: BibleSearchProps) {
                         </button>
                     </form>
 
-                    {error && (
+                    {/* Suggestions quand plusieurs livres correspondent */}
+                    {suggestions.length > 0 && (
+                        <div style={{
+                            marginTop: '0.75rem',
+                            padding: '0.75rem',
+                            background: '#FEF3C7',
+                            border: '1px solid #FCD34D',
+                            borderRadius: '0.5rem'
+                        }}>
+                            <p style={{
+                                fontSize: '0.875rem',
+                                color: '#92400E',
+                                marginBottom: '0.5rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem'
+                            }}>
+                                <AlertCircle size={16} />
+                                Plusieurs livres correspondent. Lequel cherchez-vous ?
+                            </p>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                {suggestions.map(s => (
+                                    <button
+                                        key={s.code}
+                                        onClick={() => handleSelectSuggestion(s)}
+                                        style={{
+                                            padding: '0.5rem 1rem',
+                                            background: '#FCD34D',
+                                            color: '#78350F',
+                                            border: '1px solid #F59E0B',
+                                            borderRadius: '0.5rem',
+                                            cursor: 'pointer',
+                                            fontSize: '0.875rem',
+                                            fontWeight: '500',
+                                            transition: 'all 0.2s'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.background = '#FBBF24'
+                                            e.currentTarget.style.transform = 'translateY(-1px)'
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.background = '#FCD34D'
+                                            e.currentTarget.style.transform = 'translateY(0)'
+                                        }}
+                                    >
+                                        {s.code} - {s.fullName.length > 40 ? s.fullName.substring(0, 40) + '...' : s.fullName}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Message d'erreur (sans suggestions) */}
+                    {error && suggestions.length === 0 && (
                         <div style={{
                             marginTop: '0.75rem',
                             padding: '0.75rem',
@@ -215,9 +325,11 @@ export default function BibleSearch({ onImport, onCancel }: BibleSearchProps) {
                                 border: '1px solid #BAE6FD'
                             }}>
                                 <p style={{ fontSize: '0.875rem', color: '#0369A1', marginBottom: '0.5rem', fontWeight: '600' }}>💡 Formats acceptés :</p>
-                                <ul style={{ fontSize: '0.8rem', color: '#075985', textAlign: 'left', maxWidth: '300px', margin: '0 auto' }}>
+                                <ul style={{ fontSize: '0.8rem', color: '#075985', textAlign: 'left', maxWidth: '300px', margin: '0 auto', lineHeight: '1.6' }}>
                                     <li>Noms complets : <strong>Matthieu 5</strong>, <strong>Psaume 23</strong></li>
                                     <li>Abréviations : <strong>Mt 5</strong>, <strong>Ps 23</strong>, <strong>Jn 3</strong></li>
+                                    <li>Avec/sans accents : <strong>ezekiel 1</strong>, <strong>ézéchiel 1</strong></li>
+                                    <li>Livres numérotés : <strong>1 timothée 5</strong>, <strong>2 cor 3</strong></li>
                                 </ul>
                             </div>
                         </div>
@@ -322,7 +434,10 @@ export default function BibleSearch({ onImport, onCancel }: BibleSearchProps) {
                             fontWeight: '600',
                             cursor: selectedVerses.length === 0 ? 'not-allowed' : 'pointer',
                             transition: 'all 0.2s',
-                            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+                            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem'
                         }}
                         onMouseEnter={(e) => {
                             if (selectedVerses.length > 0) e.currentTarget.style.background = '#34D399'
